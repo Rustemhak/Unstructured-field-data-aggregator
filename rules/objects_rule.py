@@ -72,7 +72,8 @@ df_copy3 = preproccess_df_code_layers(path_xlsx)
 horizons_set, horizons_names = create_dict_strat_obj(df_copy1, 'horizon')
 stages_set, stages_names = create_dict_strat_obj(df_copy2, 'stage')
 
-from yargy.interpretation import fact, attribute, normalized
+from yargy.interpretation import fact, attribute
+from yargy.predicates import normalized
 
 Horizon_object = fact('Horizon_object', ['name'])
 HORIZON_WORD = rule(normalized('горизонт'))

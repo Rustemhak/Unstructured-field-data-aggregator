@@ -1,6 +1,6 @@
 # правило для даты
 from yargy import and_, or_, rule
-from yargy.interpretation import normalized
+from yargy.predicates import normalized
 from yargy.predicates import (
     lte,
     gte,
