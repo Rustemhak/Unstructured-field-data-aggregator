@@ -8,3 +8,6 @@ def replace_short_name(text: str, dict_short: dict) -> str:
     for name in dict_short.keys():
         text = text.replace(name, dict_short[name])
     return text
+
+
+STAND_GEO_SHORT_NAMES = {'скв.': 'скважина', 'мест.': 'месторождение'}

@@ -1,7 +1,11 @@
 import xml.etree.ElementTree as ET
+from os import mkdir
+from os.path import isdir
+
 from yargy import Parser
 import pandas as pd
 
+from converting.convert_pdf_txt import read_txt
 from preprocessing_text import replace_short_name, STAND_GEO_SHORT_NAMES
 from read_report import read_pdf
 from rules.date_exploit_rule import EXPLOIT_DATE
@@ -30,7 +34,7 @@ def indent(elem, level=0):
             elem.tail = i
 
 
-def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: int, chap_id: int):
+def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: int, chap_id: int, path_xml, path_txt: str = None):
     """
     Пайплайн для конвертации главы отчёта в формате pdf в XML
     Результат в 'output.xml'
@@ -40,7 +44,12 @@ def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: i
     :param idx_end_chap: страница конца раздела
     :param chap_id: номер главы
     """
-    text = read_pdf(path_pdf, idx_beg_chap, idx_end_chap)
+
+    if path_txt is None:
+        text = read_pdf(path_pdf, idx_beg_chap, idx_end_chap)
+    else:
+        text = read_txt(path_txt)
+
     # text = extractor.replace_groups(text)
     # создание тега "отчёт"
     report = ET.Element('report')
@@ -77,7 +86,10 @@ def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: i
         # writing xml
         print(report.items())
         ET.dump(report)
-        tree.write(f"..//reports//xml//chapter{chap_id}.xml", encoding="utf-8", xml_declaration=True)
+        path_to_xml_dir = f"..//reports//xml//{path_xml}"
+        if not isdir(path_to_xml_dir):
+            mkdir(path_to_xml_dir)
+        tree.write(f"{path_to_xml_dir}//chapter{chap_id}.xml", encoding="utf-8", xml_declaration=True)
 
 
 def chapter_xml_to_pd(path: str) -> pd.DataFrame:
@@ -98,7 +110,7 @@ def concat_str_from_list(string: [str]) -> str:
     return res[:-1]
 
 
-def report_xml_to_xlsx(list_paths_chapters: [str], in_field=lambda x: True):
+def report_xml_to_xlsx(list_paths_chapters: [str], report_name: str, in_field=lambda x: True):
     """
     Перевод отчета из xml в xlsx.
 
@@ -108,29 +120,42 @@ def report_xml_to_xlsx(list_paths_chapters: [str], in_field=lambda x: True):
     report_pd = pd.DataFrame()
     for chapter_path in list_paths_chapters:
         chapter_pd = chapter_xml_to_pd(chapter_path)
-        report_pd = report_pd.append(chapter_pd)
+        report_pd = pd.concat((report_pd, chapter_pd))
 
     field = report_pd['field'].dropna().unique()[0]
-    exploit_date = report_pd['exploit_date'].dropna().unique()[0]
-    open_date = report_pd['open_date'].dropna().unique()[0]
-    location = report_pd['location'].dropna().unique()[0]
-    object_oil_deposit_raw = report_pd['object_oil_deposit'].dropna()
-    oil_deposit = report_pd['oil_deposit'].dropna()
+    try:
+        exploit_date = report_pd['exploit_date'].dropna().unique()[0]
+        open_date = report_pd['open_date'].dropna().unique()[0]
+        location = report_pd['location'].dropna().unique()[0]
+        # oil_deposit = report_pd['oil_deposit'].dropna()
+    except KeyError:
+        raise KeyError("Одна из характеристик не была найдена")
 
-    object_oil_deposit_raw = [i[1] for i in list(object_oil_deposit_raw.items())]
-    object_oil_deposit = []
-    for obj in object_oil_deposit_raw:
-        spl = obj.split()
-        object_name = concat_str_from_list(spl[:-1])
-        if not in_field(object_name):
-            continue
-        object_oil_deposit.append((concat_str_from_list(spl[:-1]), int(spl[-1])))
+    list_of_columns_object = []
+    for column in list(report_pd.columns):
+        if 'object' in column:
+            list_of_columns_object.append(column)
+    object_oil_deposit = [list(report_pd[column].dropna().items()) for column in list_of_columns_object]
+    if not object_oil_deposit:
+        print('Object_oil_deposit не нашлись(')
+    else:
+        object_oil_deposit_raw = [i[0][1] for i in object_oil_deposit]
+        object_oil_deposit = []
+        for obj in object_oil_deposit_raw:
+            idx_end_name = obj.find('count')
+            object_name = obj[7:idx_end_name-1]
+            object_count = obj[idx_end_name+9:]
 
-    report_dict = {'Месторождение': [field], 'Год открытия': [open_date],
-                   'Год начала эксплуатации': [exploit_date], 'Местоположение': [location],
-                   'объекты': [object_oil_deposit[0][0]], 'количество залежей': [object_oil_deposit[0][1]]}
-    report_df = pd.DataFrame(data=report_dict)
-    for i in object_oil_deposit[1:]:
-        report_df = report_df.append({'объекты': i[0], 'количество залежей': i[1]}, ignore_index=True)
+            if not in_field(object_name):
+                continue
 
-    report_df.to_excel("..//reports//xlsx//report.xlsx")
+            object_oil_deposit.append((object_name, int(object_count)))
+
+        report_dict = {'Месторождение': [field], 'Год открытия': [open_date],
+                       'Год начала эксплуатации': [exploit_date], 'Местоположение': [location],
+                       'объекты': [object_oil_deposit[0][0]], 'количество залежей': [object_oil_deposit[0][1]]}
+        report_df = pd.DataFrame(data=report_dict)
+        for i in object_oil_deposit[1:]:
+            report_df = report_df.append({'объекты': i[0], 'количество залежей': i[1]}, ignore_index=True)
+
+        report_df.to_excel(f"..//reports//xlsx//{report_name}.xlsx")

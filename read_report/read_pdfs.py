@@ -23,6 +23,7 @@ def clean_text_from_pdf(text: str) -> str:
 def read_pdf(path: str, idx_beg: int, idx_end: int, clean: bool = True) -> str:
     """
     Читает конкретную часть (обычно это конкретный раздел) из pdf-документа
+
     :param path: путь, где находится данный документ
     :param idx_beg: страница начала раздела
     :param idx_end: страница конца раздела
