@@ -34,7 +34,8 @@ def indent(elem, level=0):
             elem.tail = i
 
 
-def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: int, chap_id: int, path_xml, path_txt: str = None):
+def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: int, chap_id: int, path_xml,
+                               path_txt: str = None):
     """
     Пайплайн для конвертации главы отчёта в формате pdf в XML
     Результат в 'output.xml'
@@ -43,6 +44,8 @@ def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: i
     :param idx_beg_chap: страница начала раздела
     :param idx_end_chap: страница конца раздела
     :param chap_id: номер главы
+    :param path_xml: путь для сохранения xml в папке reports/xml
+    :param path_txt: путь к документу в формате txt, если документ был конвертирован из pdf в txt
     """
 
     if path_txt is None:
@@ -84,7 +87,7 @@ def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: i
     indent(report)
     if report is not None:
         # writing xml
-        print(report.items())
+        # print(report.items())
         ET.dump(report)
         path_to_xml_dir = f"..//reports//xml//{path_xml}"
         if not isdir(path_to_xml_dir):
@@ -143,8 +146,8 @@ def report_xml_to_xlsx(list_paths_chapters: [str], report_name: str, in_field=la
         object_oil_deposit = []
         for obj in object_oil_deposit_raw:
             idx_end_name = obj.find('count')
-            object_name = obj[7:idx_end_name-1]
-            object_count = obj[idx_end_name+9:]
+            object_name = obj[7:idx_end_name - 1]
+            object_count = obj[idx_end_name + 9:]
 
             if not in_field(object_name):
                 continue
