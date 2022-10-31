@@ -8,6 +8,7 @@ import pandas as pd
 from converting.convert_pdf_txt import read_txt
 from preprocessing_text import replace_short_name, STAND_GEO_SHORT_NAMES
 from read_report import read_pdf
+from read_tables.kern_table import recognize_to_read_table
 from rules.date_exploit_rule import EXPLOIT_DATE
 from rules.date_open_rule import OPEN_DATE
 from rules.field_rule import FIELD, NAME
@@ -95,6 +96,20 @@ def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: i
         tree.write(f"{path_to_xml_dir}//chapter{chap_id}.xml", encoding="utf-8", xml_declaration=True)
 
 
+def get_objects_with_kern(path: str, content) -> [str]:
+    kern_data_frame = pd.DataFrame()
+    if isinstance(content, tuple):
+        kern_data_frame = kern_data_frame.append(recognize_to_read_table(path, content[0], content[1]))
+    else:
+        for chapter in content:
+            kern_data_frame = kern_data_frame.append(recognize_to_read_table(path, chapter[0], chapter[1]))
+    if 'Продуктивный горизонт, ярус' in kern_data_frame.columns:
+        list_of_objects = list(kern_data_frame['Продуктивный горизонт, ярус'])
+        return list_of_objects
+    print('Информация о керне отсутствует')
+    return []
+
+
 def chapter_xml_to_pd(path: str) -> pd.DataFrame:
     """
     :param path: путь к файлу chapter.xml (xml файл для одной главы)
@@ -113,12 +128,17 @@ def concat_str_from_list(string: [str]) -> str:
     return res[:-1]
 
 
-def report_xml_to_xlsx(list_paths_chapters: [str], report_name: str, in_field=lambda x: True):
+def report_xml_to_xlsx(list_paths_chapters: [str], report_name: str, path_to_pdf_document: str, content,
+                       in_field=lambda x: True):
     """
     Перевод отчета из xml в xlsx.
 
-    :param list_paths_chapters: список путей к главам отчета в формате xml.
-    :param in_field: функция для проверки имен объектов на их наличие в месторождении.
+    :param list_paths_chapters: список путей к главам отчета в формате xml
+    :param report_name: имя отчета
+    :param path_to_pdf_document: путь к отчету в формате pdf (нужно для керна)
+    :param content: оглавление pdf документа в формате [tuple(idx_beg, idx_end, chapter_id)],
+        или точное положение таблицы по керну в формате tuple(idx_beg, idx_end)
+    :param in_field: функция для проверки имен объектов на их наличие в месторождении
     """
     report_pd = pd.DataFrame()
     for chapter_path in list_paths_chapters:
@@ -138,27 +158,47 @@ def report_xml_to_xlsx(list_paths_chapters: [str], report_name: str, in_field=la
     for column in list(report_pd.columns):
         if 'object' in column:
             list_of_columns_object.append(column)
-    object_oil_deposit = [list(report_pd[column].dropna().items()) for column in list_of_columns_object]
-    if not object_oil_deposit:
+    objects_oil_deposit = [list(report_pd[column].dropna().items()) for column in list_of_columns_object]
+    objects_with_kern = get_objects_with_kern(path_to_pdf_document, content)
+    if not objects_oil_deposit:
         print('Object_oil_deposit не нашлись(')
     else:
-        object_oil_deposit_raw = [i[0][1] for i in object_oil_deposit]
-        object_oil_deposit = []
+        object_oil_deposit_raw = [i[0][1] for i in objects_oil_deposit]
+        objects_oil_deposit = []
         for obj in object_oil_deposit_raw:
             idx_end_name = obj.find('count')
             object_name = obj[7:idx_end_name - 1]
             object_count = obj[idx_end_name + 9:]
 
+            if ' ' in object_name:
+                object_name = object_name.replace(' ', '-')
+
             if not in_field(object_name):
                 continue
 
-            object_oil_deposit.append((object_name, int(object_count)))
+            if objects_with_kern:
+                if object_name in objects_with_kern:
+                    with_kern = 'да'
+                else:
+                    with_kern = 'нет'
+            else:
+                with_kern = ''
+
+            objects_oil_deposit.append((object_name, int(object_count), with_kern))
+        print(objects_with_kern)
+        print(objects_oil_deposit)
+        input()
 
         report_dict = {'Месторождение': [field], 'Год открытия': [open_date],
                        'Год начала эксплуатации': [exploit_date], 'Местоположение': [location],
-                       'объекты': [object_oil_deposit[0][0]], 'количество залежей': [object_oil_deposit[0][1]]}
+                       'объекты': [objects_oil_deposit[0][0]], 'количество залежей': [objects_oil_deposit[0][1]],
+                       'керн': [objects_oil_deposit[0][2]]}
         report_df = pd.DataFrame(data=report_dict)
-        for i in object_oil_deposit[1:]:
-            report_df = report_df.append({'объекты': i[0], 'количество залежей': i[1]}, ignore_index=True)
+        for i in objects_oil_deposit[1:]:
+            report_df = report_df.append({'объекты': i[0], 'количество залежей': i[1], 'керн': i[2]}, ignore_index=True)
 
         report_df.to_excel(f"..//reports//xlsx//{report_name}.xlsx")
+
+
+if __name__ == '__main__':
+    get_objects_with_kern(r'..//reports//pdfs//Архангельское_месторождение_Пересчет_запасов_КГ.pdf', (78, 79))
