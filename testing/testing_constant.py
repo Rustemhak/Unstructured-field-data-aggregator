@@ -118,25 +118,31 @@ REPORTS_FOR_THE_TEST = {'content_a1': content_a1,
 
 PATHS_FOR_REPORTS_PDF = {
     'path_a1': '../reports/pdfs/Архангельское_месторождение_Пересчет_запасов_КГ.pdf',
+    'path_a2': '../reports/pdfs/Кн.2_Отчёт Архангельское_ПЕЧАТЬ.pdf',
     'path_i1': '../reports/pdfs/Ивинское, книга 1.pdf',
     'path_sh1': '../reports/pdfs/Книга 1 - Щербеньское.pdf',
     'path_g1': '../reports/pdfs/Том 1 Граничное.pdf',
     'path_g2': '../reports/pdfs/2 Граничное.pdf',
     'path_b1': '../reports/pdfs/Книга 1 - Байданкинское.pdf',
     'path_b2': '../reports/pdfs/Книга 2 - Байданкинское.pdf',
-    'path_ac1': '../reports/pdfs/Отчет_Аканское месторождение.pdf'
+    'path_ac': '../reports/pdfs/Отчет_Аканское месторождение.pdf'
 }
 
 PATHS_FOR_REPORTS_TXT = {
     'path_a1': '../reports/txt/archangelsk/Архангельское_месторождение_Пересчет_запасов_КГ',
+    'path_a2': '../reports/txt/archangelsk/Кн.2_Отчёт Архангельское_ПЕЧАТЬ',
     'path_i1': '../reports/txt/ivinskoe/Ивинское, книга 1',
     'path_sh1': '../reports/txt/sherbenskoe/Книга 1 - Щербеньское',
     'path_g1': '../reports/txt/granichnoe/Том 1 Граничное',
     'path_g2': '../reports/txt/granichnoe/2 Граничное',
     'path_b1': '../reports/txt/baydankinskoe/Книга 1 - Байданкинское',
     'path_b2': '../reports/txt/baydankinskoe/Книга 2 - Байданкинское',
-    'path_ac1': '../reports/txt/acanskoe/Отчет_Аканское месторождение'
+    'path_ac': '../reports/txt/acanskoe/Отчет_Аканское месторождение'
 }
 
-CONTENT_G = [0, 1, 2.1, 2.2, 2.3, 3, 4, 5, 6, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 8, 9, 10, 11, 12, 13, 14]
+CONTENT_A = list(range(14))
+CONTENT_I = list(range(15))
+CONTENT_SH = list(range(15))
 CONTENT_B = [0, 1, 2.1, 2.2, 2.3, 3, 4, 5, 6, 7, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 9, 10, 11, 12, 13, 14]
+CONTENT_AC = list(range(7))
+CONTENT_G = [0, 1, 2.1, 2.2, 2.3, 3, 4, 5, 6, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 8, 9, 10, 11, 12, 13, 14]
