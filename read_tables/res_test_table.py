@@ -24,10 +24,13 @@ def read_table_res_test_short(path, id_page: int, preproccess: bool = True) -> p
     :param preproccess: выполнять ли предобработку в таблице
     :return: датафрейм в пандасе
     """
+    table_settings = {
+        "text_y_tolerance": 6
+    }
     # id_page -= 1
     with pdfplumber.open(path) as pdf:
         if len(pdf.pages):
-            table = pdf.pages[id_page].extract_tables()
+            table = pdf.pages[id_page].extract_tables(table_settings)
     print(table)
     table = table[0]
     if preproccess:
