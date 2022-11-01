@@ -106,6 +106,7 @@ content_g2 = [(10, 25, 6),
               (214, 228, 12),
               (229, 254, 13),
               (255, 256, 14)]
+# полное содержание
 REPORTS_FOR_THE_TEST = {
     'content_a1': content_a1,
     'content_a2': content_a2,
