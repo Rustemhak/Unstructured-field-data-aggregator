@@ -49,12 +49,6 @@ def get_porosity(text):
     # ДОБАВИТЬ КЛЮЧЕВЫЕ СЛОВА ДЛЯ ПОРИСТОСТИ
     tokens = list(TOKENIZER(text))
     # IS = morph_pipeline(is_list)
-    objects = [
-        'ярус',
-        'горизонт'
-    ]
-    names = ['каширский', 'башкирский', 'верейский', 'бобриковский',
-             'алексинский', 'тульский', 'турнейский', 'кыновско-пашийский', 'шешминский']
     porosity_tokens = avg_list + gis_list + porosity_list + \
                       value_list + objects + names + coef  # + definition_list + unit_list
     DEF = morph_pipeline(definition_list)
@@ -82,6 +76,7 @@ def get_porosity(text):
         DEF = morph_pipeline(definition_list)
 
         NUM_DEF = rule(INT.interpretation(Value_por.num_def.inflected()), DEF).optional()
+
         OBJECT_NAME = rule(NAMES, OBJECTS) \
             .optional() \
             .interpretation(Value_por.object_name.inflected())
@@ -121,13 +116,16 @@ def get_porosity(text):
                            rule(INT, DEF).optional(), ) \
             .interpretation(Value_por)
         POR_AVG_VAL = rule(
-            OPTS.optional(),
+            rule(NAMES, OBJECTS) \
+                .optional() \
+                .interpretation(Value_por.object_name.inflected()),
             VAL.optional(),
             COEFF.optional(),
             OPTS.optional(),
             POROSITY_WORD,
+            GIS.optional(),
             rule(INT.interpretation(Value_por.num_def.inflected()), DEF).optional(),
-            # rule(INT, DEF).optional(),
+            rule(INT, DEF).optional(),
             rule(NAMES, OBJECTS) \
                 .optional() \
                 .interpretation(Value_por.object_name.inflected()),
