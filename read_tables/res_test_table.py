@@ -31,7 +31,7 @@ def read_table_res_test_short(path, id_page: int, preproccess: bool = True) -> p
     with pdfplumber.open(path) as pdf:
         if len(pdf.pages):
             table = pdf.pages[id_page].extract_tables(table_settings)
-    print(table)
+    # print(table)
     table = table[0]
     if preproccess:
         table = list(map(lambda x: list(map(lambda y: clear_enter(y), x)), table))

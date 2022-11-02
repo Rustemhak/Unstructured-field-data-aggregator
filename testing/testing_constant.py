@@ -106,15 +106,18 @@ content_g2 = [(10, 25, 6),
               (214, 228, 12),
               (229, 254, 13),
               (255, 256, 14)]
-REPORTS_FOR_THE_TEST = {'content_a1': content_a1,
-                        'content_a2': content_a2,
-                        'content_i1': content_i1,
-                        'content_sh1': content_sh1,
-                        'content_b1': content_b1,
-                        'content_b2': content_b2,
-                        'content_ac1': content_ac,
-                        'content_g1': content_g1,
-                        'content_g2': content_g2}
+# полное содержание
+REPORTS_FOR_THE_TEST = {
+    'content_a1': content_a1,
+    'content_a2': content_a2,
+    'content_i1': content_i1,
+    'content_sh1': content_sh1,
+    'content_b1': content_b1,
+    'content_b2': content_b2,
+    'content_ac1': content_ac,
+    'content_g1': content_g1,
+    'content_g2': content_g2
+}
 
 PATHS_FOR_REPORTS_PDF = {
     'path_a1': '../reports/pdfs/Архангельское_месторождение_Пересчет_запасов_КГ.pdf',
@@ -140,9 +143,24 @@ PATHS_FOR_REPORTS_TXT = {
     'path_ac': '../reports/txt/acanskoe/Отчет_Аканское месторождение'
 }
 
-CONTENT_A = list(range(14))
+CONTENT_A1 = list(range(8))
+CONTENT_A2 = list(range(8, 14))
 CONTENT_I = list(range(15))
 CONTENT_SH = list(range(15))
-CONTENT_B = [0, 1, 2.1, 2.2, 2.3, 3, 4, 5, 6, 7, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 9, 10, 11, 12, 13, 14]
+CONTENT_B1 = [0, 1, 2.1, 2.2, 2.3, 3, 4, 5]
+CONTENT_B2 = [6, 7, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 9, 10, 11, 12, 13, 14]
 CONTENT_AC = list(range(7))
-CONTENT_G = [0, 1, 2.1, 2.2, 2.3, 3, 4, 5, 6, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 8, 9, 10, 11, 12, 13, 14]
+CONTENT_G1 = [0, 1, 2.1, 2.2, 2.3, 3, 4, 5]
+CONTENT_G2 = [6, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 8, 9, 10, 11, 12, 13, 14]
+
+CONTENTS = {
+    'content_a1': CONTENT_A1,
+    'content_a2': CONTENT_A2,
+    'content_i1': CONTENT_I,
+    'content_sh1': CONTENT_SH,
+    'content_b1': CONTENT_B1,
+    'content_b2': CONTENT_B2,
+    'content_ac1': CONTENT_AC,
+    'content_g1': CONTENT_G1,
+    'content_g2': CONTENT_G2
+}
