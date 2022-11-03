@@ -102,7 +102,7 @@ def get_objects_with_kern(field_name):
     path_to_json = pth.join('..', 'reports', 'objects_with_kern', field_name)
     paths_to_json = [pth.join(path_to_json, report_name) for report_name in os.listdir(path_to_json)]
     for path in paths_to_json:
-        with open(path, 'r') as file:
+        with open(path, 'r', encoding='utf-8') as file:
             objects_with_kern += json.load(file)
     return objects_with_kern
 

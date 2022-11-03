@@ -5,10 +5,10 @@ from os.path import isdir, join
 import pandas as pd
 
 from converting.convert_pdf_txt import pdf_to_txt, read_txt
-from pipeline_for_testing import convert_chapter_pdf_to_xml, report_xml_to_xlsx
+from pipeline_for_testing import convert_chapter_pdf_to_xml, report_xml_to_xlsx, get_objects_with_kern
 from preprocessing_text import replace_short_name, STAND_GEO_SHORT_NAMES
-from in_field_functions import in_archangel_field
 from read_tables.kern_table import recognize_to_read_table
+from in_field_functions import in_archangel_field
 from testing_constant import *
 from yargy_utils import number_extractor
 
@@ -71,23 +71,76 @@ def converting_txt_to_xml(content_name: str, field_name: str, path_to_upd_txt: s
     print("Success .////.")
 
 
-def save_objects_with_kern(path_name: str, content_name: str, field_name) -> [str]:
-    kern_data_frame = pd.DataFrame()
-    content = REPORTS_FOR_THE_TEST[content_name]
-    path = PATHS_FOR_REPORTS_PDF[path_name]
-    if isinstance(content, tuple):
-        kern_data_frame = kern_data_frame.append(recognize_to_read_table(path, content[0], content[1]))
-    else:
-        for chapter in content:
-            kern_data_frame = kern_data_frame.append(recognize_to_read_table(path, chapter[0], chapter[1]))
-    if 'Продуктивный горизонт, ярус' in kern_data_frame.columns:
-        list_of_objects = list(kern_data_frame['Продуктивный горизонт, ярус'])
+def get_modifed(string: str):
+    """Возвращает модифицированную строку. Приводит строку к английским буквам."""
+    eq = {
+        'o': 'о', 'e': 'е',
+        'c': 'с', 'p': 'р',
+        'O': 'О', 'E': 'Е',
+        'C': 'С', 'P': 'Р'
+    }
+    if string:
+        for en, ru in eq.items():
+            string = string.replace(ru, en)
 
+        return string
+    return None
+
+
+def save_objects_with_kern(path_name: str, content_name: str or tuple[int], field_name) -> [str]:
+    """
+
+    :param path_name:
+    :param content_name:
+    :param field_name:
+    :return:
+    """
+    kern_dataframe = pd.DataFrame()
+    path = PATHS_FOR_REPORTS_PDF[path_name]
+    if isinstance(content_name, tuple):
+        kern_dataframe = kern_dataframe.append(recognize_to_read_table(path, content_name[0], content_name[1]))
+    else:
+        content = REPORTS_FOR_THE_TEST[content_name]
+        for chapter in content:
+            kern_dataframe = kern_dataframe.append(recognize_to_read_table(path, chapter[0], chapter[1]))
+
+    list_of_columns = kern_dataframe.columns
+    list_of_codes_objects = list(kern_dataframe[list_of_columns[0]])
+
+    for i in range(len(list_of_codes_objects)):
+        list_of_codes_objects[i] = get_modifed(list_of_codes_objects[i])
+
+    object_code_dataframe = pd.read_excel(join('..', 'reports', 'xlsx', 'Layers_codes.xlsx'), usecols='M,N')
+    codes = list(object_code_dataframe['stratigraphic_index'])
+    objects = list(object_code_dataframe['horizon'])
+
+    for i in range(len(codes)):
+        codes[i] = get_modifed(codes[i])
+
+    code_object_dict = {}
+
+    for code, obj in zip(codes, objects):
+        code_object_dict[code.replace(' ', '')] = obj
+
+    list_of_objects = []
+    for code in list_of_codes_objects:
+        if code:
+            code = code.replace(' ', '')
+            if code in code_object_dict:
+                obj = code_object_dict[code]
+                if isinstance(obj, str):
+                    list_of_objects.append(obj.lower())
+
+    if list_of_objects:
         if not isdir(f'../reports/objects_with_kern/{field_name}'):
             mkdir(f'../reports/objects_with_kern/{field_name}')
 
-        with open(f'../reports/objects_with_kern/{field_name}/{content_name.split("_")[1]}.json', 'w') as file:
-            json.dump(list_of_objects, file)
+        with open(
+                f'../reports/objects_with_kern/{field_name}/{path_name.split("_")[1]}.json',
+                'w', encoding='utf-8'
+        ) as file:
+            json.dump(list_of_objects, file, ensure_ascii=False)
+        print('Данные о керне получены')
         return list_of_objects
     print('Информация о керне отсутствует')
     return []
@@ -140,6 +193,9 @@ def testing(path_name: str or [str], content_name: str or [str], field_name: str
 
 
 if __name__ == '__main__':
+    # save_objects_with_kern('path_i1', (84, 84), 'ivinskoe')
+    # save_objects_with_kern('path_a1', (78, 78), 'archangelsk')
+
     # testing(
     #     ['path_a1', 'path_a2'],
     #     ['content_a1', 'content_a2'],
@@ -187,8 +243,8 @@ if __name__ == '__main__':
     # save_objects_with_kern('path_g2', 'content_g2', 'granichnoe')
 
     # converting_xml_to_xlsx('archangelsk', CONTENT_A1 + CONTENT_A2, in_archangel_field)
-    # converting_xml_to_xlsx('ivinskoe', CONTENT_I)
+    converting_xml_to_xlsx('ivinskoe', CONTENT_I)
     # converting_xml_to_xlsx('sherbenskoe', CONTENT_SH)
     # converting_xml_to_xlsx('baydankinskoe', CONTENT_B1 + CONTENT_B2)
     # converting_xml_to_xlsx('acanskoe', CONTENT_AC)
-    converting_xml_to_xlsx('granichnoe', CONTENT_G1 + CONTENT_G2)
+    # converting_xml_to_xlsx('granichnoe', CONTENT_G1 + CONTENT_G2)
