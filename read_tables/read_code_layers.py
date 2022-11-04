@@ -38,12 +38,12 @@ def cut_name(name):
 
 
 def create_dict_strat_obj(obj_pd: pd.DataFrame, name_object: str) -> tuple:
-    '''
+    """
     Формирует список объектов сущности(добавляется множество номеров строк) и уникальных названий
     :param obj_pd: датафрейм
     :param name_object: название сущности
     :return: множество объектов и множество уникальных названий сущности
-    '''
+    """
     objects_set = []
     object_names = []
     for row in obj_pd.loc[:, : name_object].itertuples():

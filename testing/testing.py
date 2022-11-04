@@ -3,6 +3,7 @@ from os import listdir, mkdir
 from os.path import isdir, join
 
 import pandas as pd
+from yargy import Parser, rule
 
 from converting.convert_pdf_txt import pdf_to_txt, read_txt
 from pipeline_for_testing import convert_chapter_pdf_to_xml, report_xml_to_xlsx, get_objects_with_kern
@@ -10,16 +11,16 @@ from preprocessing_text import replace_short_name, STAND_GEO_SHORT_NAMES
 from read_tables.kern_table import recognize_to_read_table
 from in_field_functions import in_archangel_field
 from testing_constant import *
-from yargy_utils import number_extractor
+from yargy_utils import number_extractor, ADJF
 
 
-def converting_pdf_to_txt(path_name: str, content_name: str, field_name: str):
+def converting_pdf_to_txt(path_name: str, content_name: str, field_name: str) -> None:
     """
+    Конвертировать pdf файлы в txt файлы (Из pdf файлов берется текст)
 
-    :param path_name:
-    :param content_name:
-    :param field_name:
-    :return:
+    :param path_name: Имя пути к отчету (Example: 'path_a1')
+    :param content_name: Имя содержания отчета (Example: 'content_a1')
+    :param field_name: Имя месторождения (Example: 'archangelsk')
     """
     print('converting pdf to txt...')
     path = PATHS_FOR_REPORTS_PDF[path_name]
@@ -28,13 +29,15 @@ def converting_pdf_to_txt(path_name: str, content_name: str, field_name: str):
         pdf_to_txt(path, idx_beg, idx_end, chapter_id, field_name)
 
 
-def replacing_words(path_name: str, content_name: str, field_name: str):
+def replacing_words(path_name: str, content_name: str, field_name: str) -> str:
     """
+    Обработать текст txt файлов по месторождению и сохранить в новые txt файлы.
+    Вернуть путь к папке с получившимися файлами
 
-    :param path_name:
-    :param content_name:
-    :param field_name:
-    :return:
+    :param path_name: Имя пути к отчету (Example: 'path_a1')
+    :param content_name: Имя содержания отчета (Example: 'content_a1')
+    :param field_name: Имя месторождения (Example: 'archangelsk')
+    :return: Путь к папке с txt файлами обработанного текса
     """
     print('replacing words...')
     path_to_upd_txt = join(
@@ -55,13 +58,13 @@ def replacing_words(path_name: str, content_name: str, field_name: str):
     return path_to_upd_txt
 
 
-def converting_txt_to_xml(content_name: str, field_name: str, path_to_upd_txt: str):
+def converting_txt_to_xml(content_name: str, field_name: str, path_to_upd_txt: str) -> None:
     """
+    Конвертировать txt файлы обработанного текса по месторождению в xml файлы
 
-    :param content_name:
-    :param field_name:
-    :param path_to_upd_txt:
-    :return:
+    :param content_name: Имя содержания отчета (Example: 'content_a1')
+    :param field_name: Имя месторождения (Example: 'archangelsk')
+    :param path_to_upd_txt: Путь к папке с txt файлами обработанного текста по месторождению
     """
     print('converting txt to xml...')
     for chapter, chapter_path in list(zip(REPORTS_FOR_THE_TEST[content_name], listdir(path_to_upd_txt))):
@@ -89,20 +92,25 @@ def get_modifed(string: str):
 
 def save_objects_with_kern(path_name: str, content_name: str or tuple[int], field_name) -> [str]:
     """
+    Сохранить в json файл и вернуть список объектов с керном
 
-    :param path_name:
-    :param content_name:
-    :param field_name:
-    :return:
+    :param path_name: Имя пути к отчету (Example: 'path_a1')
+    :param content_name: Имя содержания отчета (Example: 'content_a1') для поиска таблицы по керну по всему отчету.
+        Если передан итерируемый объект со страницами начала и конца диапазона, то поиск ведется только в нем.
+    :param field_name: Имя месторождения (Example: 'archangelsk')
+    :return: Список объектов с керном, или пустой список, если таблица по керну не найдена
     """
     kern_dataframe = pd.DataFrame()
     path = PATHS_FOR_REPORTS_PDF[path_name]
+
     if isinstance(content_name, tuple):
-        kern_dataframe = kern_dataframe.append(recognize_to_read_table(path, content_name[0], content_name[1]))
+        kern_dataframe = pd.concat((kern_dataframe, recognize_to_read_table(path, content_name[0], content_name[1])))
+        # kern_dataframe = kern_dataframe.append(recognize_to_read_table(path, content_name[0], content_name[1]))
     else:
         content = REPORTS_FOR_THE_TEST[content_name]
         for chapter in content:
-            kern_dataframe = kern_dataframe.append(recognize_to_read_table(path, chapter[0], chapter[1]))
+            kern_dataframe = pd.concat((kern_dataframe, recognize_to_read_table(path, chapter[0], chapter[1])))
+            # kern_dataframe = kern_dataframe.append(recognize_to_read_table(path, chapter[0], chapter[1]))
 
     list_of_columns = kern_dataframe.columns
     list_of_codes_objects = list(kern_dataframe[list_of_columns[0]])
@@ -123,13 +131,24 @@ def save_objects_with_kern(path_name: str, content_name: str or tuple[int], fiel
         code_object_dict[code.replace(' ', '')] = obj
 
     list_of_objects = []
-    for code in list_of_codes_objects:
-        if code:
-            code = code.replace(' ', '')
-            if code in code_object_dict:
-                obj = code_object_dict[code]
-                if isinstance(obj, str):
-                    list_of_objects.append(obj.lower())
+
+    # Правило для прилагательного
+    # Если в списке кодов объектов есть прилагательное, то там уже названия объектов
+    adjf_rule = rule(ADJF)
+    adjf_parser = Parser(adjf_rule)
+
+    if adjf_parser.findall(list_of_codes_objects[0]):
+        # Если в таблице по керну были указаны имена объектов, то сразу берем их
+        list_of_objects = list_of_codes_objects
+    else:
+        # Иначе сверяем коды объектов из таблицы с именами объектов из Layers_codes.xlsx
+        for code in list_of_codes_objects:
+            if code:
+                code = code.replace(' ', '')
+                if code in code_object_dict:
+                    obj = code_object_dict[code]
+                    if isinstance(obj, str):
+                        list_of_objects.append(obj.lower())
 
     if list_of_objects:
         if not isdir(f'../reports/objects_with_kern/{field_name}'):
@@ -146,14 +165,13 @@ def save_objects_with_kern(path_name: str, content_name: str or tuple[int], fiel
     return []
 
 
-def converting_xml_to_xlsx(field_name: str, content: [], in_field=lambda x: True):
+def converting_xml_to_xlsx(field_name: str, content: [], in_field=lambda x: True) -> None:
     """
+    Конвертировать xml файлы в xlsx таблицу с результатами алгоритма
 
-    :param field_name:
-    :param content:
-    :param contents_name:
-    :param in_field:
-    :return:
+    :param field_name: Имя месторождения (Example: 'archangelsk')
+    :param content: Имя содержания отчета (Example: 'content_a1')
+    :param in_field: Функция, возвращающая True если объект входит в перечень объектов месторождения
     """
     path_to_xml = join('..', 'reports', 'xml', field_name)
     list_of_paths = [join(path_to_xml, f"chapter{chapter_number}.xml") for chapter_number in content]
@@ -162,15 +180,17 @@ def converting_xml_to_xlsx(field_name: str, content: [], in_field=lambda x: True
 
 
 def testing(path_name: str or [str], content_name: str or [str], field_name: str,
-            content: [], in_field=lambda x: True):
+            content: [int or float], in_field=lambda x: True) -> None:
     """
+    Пайплайн для обработки отчета из pdf документа в результирующую xlsx таблицу
+    Для обработки сразу нескольких pdf файлов по одному месторождению можно передать
+    имена путей и содержаний в виде списка имен (['path_a1', 'path_a2'], ['content_a1', 'content_a2'])
 
-    :param path_name:
-    :param content_name:
-    :param field_name:
-    :param content:
-    :param in_field:
-    :return:
+    :param path_name: Имя пути к отчету (Example: 'path_a1')
+    :param content_name: Имя содержания отчета (Example: 'content_a1')
+    :param field_name: Имя месторождения (Example: 'archangelsk')
+    :param content: Список номеров глав отчета
+    :param in_field: Функция, возвращающая True если объект входит в перечень объектов месторождения
     """
     if not isinstance(path_name, list):
         path_name = [].append(path_name)
@@ -234,6 +254,7 @@ if __name__ == '__main__':
     #     CONTENT_G1
     # )
 
+    save_objects_with_kern('path_a1', (78, 78), 'archangelsk')
     # save_objects_with_kern('path_i1', 'content_i1', 'ivinskoe')
     # save_objects_with_kern('path_sh1', 'content_sh1', 'sherbenskoe')
     # save_objects_with_kern('path_b1', 'content_b1', 'baydankinskoe')
@@ -243,7 +264,7 @@ if __name__ == '__main__':
     # save_objects_with_kern('path_g2', 'content_g2', 'granichnoe')
 
     # converting_xml_to_xlsx('archangelsk', CONTENT_A1 + CONTENT_A2, in_archangel_field)
-    converting_xml_to_xlsx('ivinskoe', CONTENT_I)
+    # converting_xml_to_xlsx('ivinskoe', CONTENT_I)
     # converting_xml_to_xlsx('sherbenskoe', CONTENT_SH)
     # converting_xml_to_xlsx('baydankinskoe', CONTENT_B1 + CONTENT_B2)
     # converting_xml_to_xlsx('acanskoe', CONTENT_AC)

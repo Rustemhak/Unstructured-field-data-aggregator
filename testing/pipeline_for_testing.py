@@ -130,12 +130,7 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
     Перевод отчета из xml в xlsx.
 
     :param list_paths_chapters: список путей к главам отчета в формате xml
-    :param report_name: имя отчета
     :param field_name: имя месторождения
-    :param contents_name: имена содержаний отчета (полное содержание)
-    :param path_to_pdf_document: путь к отчету в формате pdf (нужно для керна)
-    :param content: оглавление pdf документа в формате [tuple(idx_beg, idx_end, chapter_id)],
-        или точное положение таблицы по керну в формате tuple(idx_beg, idx_end)
     :param in_field: функция для проверки имен объектов на их наличие в месторождении
     """
     report_pd = pd.DataFrame()
@@ -192,10 +187,25 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
                        'керн': [objects_oil_deposit[0][2]]}
         report_df = pd.DataFrame(data=report_dict)
         for i in objects_oil_deposit[1:]:
-            report_df = report_df.append({'объекты': i[0], 'количество залежей': i[1], 'керн': i[2]}, ignore_index=True)
+            report_df = pd.concat((
+                report_pd,
+                pd.DataFrame({
+                    'объекты': i[0],
+                    'количество залежей': i[1],
+                    'керн': i[2]
+                })
+            ))
+            # report_df = report_df.append(
+            #     {
+            #         'объекты': i[0],
+            #         'количество залежей': i[1],
+            #         'керн': i[2]
+            #     },
+            #     ignore_index=True
+            # )
 
         report_df.to_excel(f"..//reports//xlsx//{field_name}.xlsx")
 
 
-if __name__ == '__main__':
-    get_objects_with_kern(r'..//reports//pdfs//Архангельское_месторождение_Пересчет_запасов_КГ.pdf', (78, 79))
+# if __name__ == '__main__':
+#     get_objects_with_kern(r'..//reports//pdfs//Архангельское_месторождение_Пересчет_запасов_КГ.pdf', (78, 79))
