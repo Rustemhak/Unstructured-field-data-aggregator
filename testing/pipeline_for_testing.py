@@ -90,7 +90,7 @@ def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: i
     if report is not None:
         # writing xml
         # print(report.items())
-        ET.dump(report)
+        # ET.dump(report)
         path_to_xml_dir = f"..//reports//xml//{path_xml}"
         if not isdir(path_to_xml_dir):
             mkdir(path_to_xml_dir)

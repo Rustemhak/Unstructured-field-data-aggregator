@@ -9,11 +9,11 @@ from yargy_utils import TOKENIZER, show_json
 
 
 def merge_names(name_horizon):
-    '''
+    """
     Функция для слияния названий горизонтов
     :param name_horizon: название горизонта из таблицы
     :return: название горизонта через дефис или без него
-    '''
+    """
     if name_horizon is not np.NAN and '+' in name_horizon:
         cleaned_name = re.sub(r"\s+", "", name_horizon)
         n1, n2 = cleaned_name.split('+')
@@ -22,11 +22,11 @@ def merge_names(name_horizon):
 
 
 def preproccess_df_code_layers(path_df: str) -> pd.DataFrame:
-    '''
+    """
     Пайплайн предобработки таблицы коды пластов
     :param path_df: путь к таблице
     :return: подготовленный датафрейм
-    '''
+    """
     df = pd.read_excel(path_df)
     df['indexes'] = [set() for _ in range(df.shape[0])]
     first_column = df.pop('indexes')
@@ -42,12 +42,12 @@ def cut_name(name):
 
 
 def create_dict_strat_obj(obj_pd: pd.DataFrame, name_object: str) -> tuple:
-    '''
+    """
     Формирует список объектов сущности(добавляется множество номеров строк) и уникальных названий
     :param obj_pd: датафрейм
     :param name_object: название сущности
     :return: множество объектов и множество уникальных названий сущности
-    '''
+    """
     objects_set = []
     object_names = []
     for row in obj_pd.loc[:, : name_object].itertuples():

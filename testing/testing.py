@@ -67,9 +67,11 @@ def converting_txt_to_xml(content_name: str, field_name: str, path_to_upd_txt: s
     :param path_to_upd_txt: Путь к папке с txt файлами обработанного текста по месторождению
     """
     print('converting txt to xml...')
-    for chapter, chapter_path in list(zip(REPORTS_FOR_THE_TEST[content_name], listdir(path_to_upd_txt))):
-        print(f"{chapter[-1]} из {REPORTS_FOR_THE_TEST[content_name][-1][-1]}")
-        convert_chapter_pdf_to_xml("", *chapter, field_name, join(path_to_upd_txt, chapter_path))
+    content = REPORTS_FOR_THE_TEST[content_name]
+    paths_to_upd_txt = [join(path_to_upd_txt, f'{chapter[2]}upd.txt') for chapter in content]
+    for chapter, chapter_path in list(zip(content, paths_to_upd_txt)):
+        print(f"{chapter[-1]} из {content[-1][-1]}")
+        convert_chapter_pdf_to_xml("", *chapter, field_name, chapter_path)
 
     print("Success .////.")
 
@@ -113,54 +115,55 @@ def save_objects_with_kern(path_name: str, content_name: str or tuple[int], fiel
             # kern_dataframe = kern_dataframe.append(recognize_to_read_table(path, chapter[0], chapter[1]))
 
     list_of_columns = kern_dataframe.columns
-    list_of_codes_objects = list(kern_dataframe[list_of_columns[0]])
+    if list_of_columns:
+        list_of_codes_objects = list(kern_dataframe[list_of_columns[0]])
 
-    for i in range(len(list_of_codes_objects)):
-        list_of_codes_objects[i] = get_modifed(list_of_codes_objects[i])
+        for i in range(len(list_of_codes_objects)):
+            list_of_codes_objects[i] = get_modifed(list_of_codes_objects[i])
 
-    object_code_dataframe = pd.read_excel(join('..', 'reports', 'xlsx', 'Layers_codes.xlsx'), usecols='M,N')
-    codes = list(object_code_dataframe['stratigraphic_index'])
-    objects = list(object_code_dataframe['horizon'])
+        object_code_dataframe = pd.read_excel(join('..', 'reports', 'xlsx', 'Layers_codes.xlsx'), usecols='M,N')
+        codes = list(object_code_dataframe['stratigraphic_index'])
+        objects = list(object_code_dataframe['horizon'])
 
-    for i in range(len(codes)):
-        codes[i] = get_modifed(codes[i])
+        for i in range(len(codes)):
+            codes[i] = get_modifed(codes[i])
 
-    code_object_dict = {}
+        code_object_dict = {}
 
-    for code, obj in zip(codes, objects):
-        code_object_dict[code.replace(' ', '')] = obj
+        for code, obj in zip(codes, objects):
+            code_object_dict[code.replace(' ', '')] = obj
 
-    list_of_objects = []
+        list_of_objects = []
 
-    # Правило для прилагательного
-    # Если в списке кодов объектов есть прилагательное, то там уже названия объектов
-    adjf_rule = rule(ADJF)
-    adjf_parser = Parser(adjf_rule)
+        # Правило для прилагательного
+        # Если в списке кодов объектов есть прилагательное, то там уже названия объектов
+        adjf_rule = rule(ADJF)
+        adjf_parser = Parser(adjf_rule)
 
-    if adjf_parser.findall(list_of_codes_objects[0]):
-        # Если в таблице по керну были указаны имена объектов, то сразу берем их
-        list_of_objects = list_of_codes_objects
-    else:
-        # Иначе сверяем коды объектов из таблицы с именами объектов из Layers_codes.xlsx
-        for code in list_of_codes_objects:
-            if code:
-                code = code.replace(' ', '')
-                if code in code_object_dict:
-                    obj = code_object_dict[code]
-                    if isinstance(obj, str):
-                        list_of_objects.append(obj.lower())
+        if adjf_parser.findall(list_of_codes_objects[0]):
+            # Если в таблице по керну были указаны имена объектов, то сразу берем их
+            list_of_objects = list_of_codes_objects
+        else:
+            # Иначе сверяем коды объектов из таблицы с именами объектов из Layers_codes.xlsx
+            for code in list_of_codes_objects:
+                if code:
+                    code = code.replace(' ', '')
+                    if code in code_object_dict:
+                        obj = code_object_dict[code]
+                        if isinstance(obj, str):
+                            list_of_objects.append(obj.lower())
 
-    if list_of_objects:
-        if not isdir(f'../reports/objects_with_kern/{field_name}'):
-            mkdir(f'../reports/objects_with_kern/{field_name}')
+        if list_of_objects:
+            if not isdir(f'../reports/objects_with_kern/{field_name}'):
+                mkdir(f'../reports/objects_with_kern/{field_name}')
 
-        with open(
-                f'../reports/objects_with_kern/{field_name}/{path_name.split("_")[1]}.json',
-                'w', encoding='utf-8'
-        ) as file:
-            json.dump(list_of_objects, file, ensure_ascii=False)
-        print('Данные о керне получены')
-        return list_of_objects
+            with open(
+                    f'../reports/objects_with_kern/{field_name}/{path_name.split("_")[1]}.json',
+                    'w', encoding='utf-8'
+            ) as file:
+                json.dump(list_of_objects, file, ensure_ascii=False)
+            print('Данные о керне получены')
+            return list_of_objects
     print('Информация о керне отсутствует')
     return []
 
@@ -180,7 +183,7 @@ def converting_xml_to_xlsx(field_name: str, content: [], in_field=lambda x: True
 
 
 def testing(path_name: str or [str], content_name: str or [str], field_name: str,
-            content: [int or float], in_field=lambda x: True) -> None:
+            content: [int or float], in_field=lambda x: True, kern_pages=None, kern=True) -> None:
     """
     Пайплайн для обработки отчета из pdf документа в результирующую xlsx таблицу
     Для обработки сразу нескольких pdf файлов по одному месторождению можно передать
@@ -191,17 +194,23 @@ def testing(path_name: str or [str], content_name: str or [str], field_name: str
     :param field_name: Имя месторождения (Example: 'archangelsk')
     :param content: Список номеров глав отчета
     :param in_field: Функция, возвращающая True если объект входит в перечень объектов месторождения
+    :param kern_pages: Диапазон отчета (idx_beg, idx_end, path_name), где находится таблица по керну
+    :param kern: Нужно ли извлекать таблицу по керну
     """
     if not isinstance(path_name, list):
         path_name = [].append(path_name)
     if not isinstance(content_name, list):
         content_name = [].append(content_name)
 
-    for name in zip(path_name, content_name):
-        save_objects_with_kern(name[0], name[1], field_name)
-        converting_pdf_to_txt(*name, field_name)
-        path_to_upd_txt = replacing_words(*name, field_name)
-        converting_txt_to_xml(name[1], field_name, path_to_upd_txt)
+    if kern_pages and kern:
+        save_objects_with_kern(kern_pages[2], kern_pages[:2], field_name)
+
+    for path_n, content_n in zip(path_name, content_name):
+        if not kern_pages and kern:
+            save_objects_with_kern(path_n, content_n, field_name)
+        converting_pdf_to_txt(path_n, content_n, field_name)
+        path_to_upd_txt = replacing_words(path_n, content_n, field_name)
+        converting_txt_to_xml(content_n, field_name, path_to_upd_txt)
 
     converting_xml_to_xlsx(field_name, content, in_field)
 
@@ -216,12 +225,15 @@ if __name__ == '__main__':
     # save_objects_with_kern('path_i1', (84, 84), 'ivinskoe')
     # save_objects_with_kern('path_a1', (78, 78), 'archangelsk')
 
+    converting_txt_to_xml('content_a1', 'archangelsk', join('..', 'reports', 'txt', 'archangelsk', 'upd'))
+
     # testing(
     #     ['path_a1', 'path_a2'],
     #     ['content_a1', 'content_a2'],
     #     'archangelsk',
     #     CONTENT_A1 + CONTENT_A2,
-    #     in_archangel_field
+    #     in_archangel_field,
+    #     kern=False
     # )
     # testing(
     #     'path_i1',
@@ -254,7 +266,7 @@ if __name__ == '__main__':
     #     CONTENT_G1
     # )
 
-    save_objects_with_kern('path_a1', (78, 78), 'archangelsk')
+    # save_objects_with_kern('path_a1', (78, 78), 'archangelsk')
     # save_objects_with_kern('path_i1', 'content_i1', 'ivinskoe')
     # save_objects_with_kern('path_sh1', 'content_sh1', 'sherbenskoe')
     # save_objects_with_kern('path_b1', 'content_b1', 'baydankinskoe')

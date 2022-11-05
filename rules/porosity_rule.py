@@ -24,6 +24,12 @@ class Value_por(Value_por):
 
 
 def get_porosity(text):
+    objects = [
+        'ярус',
+        'горизонт'
+    ]
+    names = ['каширский', 'башкирский', 'верейский', 'бобриковский',
+             'алексинский', 'тульский', 'турнейский', 'кыновско-пашийский', 'шешминский']
     # print(text)
     # FIELD + date + пробурить + NUMR + скважина + , + оборот + NUMR + тип скважи
     # среднее
@@ -152,18 +158,21 @@ def get_porosity(text):
                 print('1pars', match)
                 fact = match.fact
                 show_json(fact.as_json)
+            return matches1
         elif matches2:
             match = matches2[0]
             for match in matches2:
                 print('2pars', match)
                 fact = match.fact
                 show_json(fact.as_json)
+            return matches2
         elif matches3:
             match = matches3[0]
             for match in matches3:
                 print('3pars', match)
                 fact = match.fact
                 show_json(fact.as_json)
+            return matches3
         # отдельно ГИС
         # elif False:
         #     pass
