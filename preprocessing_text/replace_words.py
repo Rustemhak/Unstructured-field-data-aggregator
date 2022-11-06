@@ -5,9 +5,9 @@ def replace_short_name(text: str, dict_short: dict) -> str:
     :param dict_short: словарь сокращений
     :return: обновленный текст
     """
-    for name in dict_short.keys():
-        text = text.replace(name, dict_short[name])
+    for k, v in dict_short.items():
+        text = text.replace(k, v)
     return text
 
 
-STAND_GEO_SHORT_NAMES = {'скв.': 'скважина', 'мест.': 'месторождение'}
+STAND_GEO_SHORT_NAMES = {'скв.': 'скважина', 'мест.': 'месторождение', 'ед.': 'единиц'}
