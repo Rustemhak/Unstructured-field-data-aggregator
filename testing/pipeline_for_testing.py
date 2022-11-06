@@ -2,7 +2,7 @@ import json
 import os
 import xml.etree.ElementTree as ET
 from os import mkdir, path as pth
-from os.path import isdir
+from os.path import isdir, join
 
 from yargy import Parser
 import pandas as pd
@@ -16,7 +16,9 @@ from rules.field_rule import FIELD, NAME
 from rules.location_rule import LOC
 from rules.oil_deposit_rule import set_tag_attr_oil_deposit
 from sentenizer.segment_sentences import segment_to_sent
-from xml_making.tag_making import set_xml_tag_sentences, set_tag_attr, set_tag_attr_for_field
+from testing_constant import CONTENT_G1, CONTENT_G2, CONTENT_B1, CONTENT_B2
+from xml_making.tag_making import set_xml_tag_sentences, set_tag_attr, set_tag_attr_for_field, \
+    set_tag_attr_object_charact
 from yargy_utils import TOKENIZER
 
 
@@ -34,6 +36,27 @@ def indent(elem, level=0):
     else:
         if level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
+
+
+def get_modifed(string: str, language: str):
+    """Возвращает модифицированную строку. Приводит строку к английским буквам."""
+    eq = {
+        'o': 'о', 'e': 'е',
+        'c': 'с', 'p': 'р',
+        'O': 'О', 'E': 'Е',
+        'C': 'С', 'P': 'Р'
+    }
+    if string:
+        for en, ru in eq.items():
+            if language == 'en':
+                string = string.replace(ru, en)
+            elif language == 'ru':
+                string = string.replace(en, ru)
+            else:
+                raise AttributeError(f"attribute language expected 'ru' or 'en', but got {language}")
+
+        return string
+    return None
 
 
 def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: int, chap_id: int, path_xml,
@@ -85,6 +108,9 @@ def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: i
 
     set_tag_attr_oil_deposit(chapter)
 
+    set_tag_attr_object_charact(chapter, 'oil_sat')
+    set_tag_attr_object_charact(chapter, 'porosity')
+
     tree = ET.ElementTree(report)
     indent(report)
     if report is not None:
@@ -100,6 +126,9 @@ def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: i
 def get_objects_with_kern(field_name):
     objects_with_kern = []
     path_to_json = pth.join('..', 'reports', 'objects_with_kern', field_name)
+    if not isdir(path_to_json):
+        print('Данные по керну отсутствуют')
+        return None
     paths_to_json = [pth.join(path_to_json, report_name) for report_name in os.listdir(path_to_json)]
     for path in paths_to_json:
         with open(path, 'r', encoding='utf-8') as file:
@@ -125,6 +154,18 @@ def concat_str_from_list(string: [str]) -> str:
     return res[:-1]
 
 
+def get_charact_info_from_str(string: str) -> tuple:
+    charact_num_def_idx = string.find('num_def')
+    charact_value_idx = string.find('value')
+    charact_num_def = 0
+
+    if charact_num_def_idx != -1:
+        charact_num_def = int(string[charact_num_def_idx + 9:charact_value_idx - 2])
+    charact_value = string[charact_value_idx + 7:]
+
+    return charact_value, charact_num_def
+
+
 def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lambda x: True):
     """
     Перевод отчета из xml в xlsx.
@@ -141,19 +182,59 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
     field = report_pd['field'].dropna().unique()[0]
     try:
         exploit_date = report_pd['exploit_date'].dropna().unique()[0]
-        open_date = report_pd['open_date'].dropna().unique()[0]
-        location = report_pd['location'].dropna().unique()[0]
-        # oil_deposit = report_pd['oil_deposit'].dropna()
     except KeyError:
-        raise KeyError("Одна из характеристик не была найдена")
+        exploit_date = None
+        print('Дата введения в эксплуатацию не найдена')
+    try:
+        open_date = report_pd['open_date'].dropna().unique()[0]
+    except KeyError:
+        open_date = None
+        print('Дата открытия не найдена')
+    try:
+        location = report_pd['location'].dropna().unique()[0]
+    except KeyError:
+        location = None
+        print("Местоположение не найдено")
 
     list_of_columns_object = []
     for column in list(report_pd.columns):
-        if 'object' in column:
+        if 'object_oil_deposit' in column:
             list_of_columns_object.append(column)
     objects_oil_deposit = [list(report_pd[column].dropna().items()) for column in list_of_columns_object]
 
     objects_with_kern = get_objects_with_kern(field_name)
+    if objects_with_kern:
+        for idx, obj_name in enumerate(objects_with_kern):
+            objects_with_kern[idx] = get_modifed(obj_name, 'ru')
+
+    try:
+        oil_sat = list(report_pd['oil_sat'].dropna())
+        objects_oil_sat = list(report_pd['object_oil_sat'].dropna())
+    except KeyError:
+        oil_sat = []
+        objects_oil_sat = []
+    try:
+        porosity = list(report_pd['porosity'].dropna())
+        objects_porosity = list(report_pd['object_porosity'].dropna())
+    except KeyError:
+        porosity = []
+        objects_porosity = []
+
+    oil_sat_dict = {}
+    porosity_dict = {}
+
+    for_charact_dict = [(oil_sat_dict, objects_oil_sat, oil_sat),
+                        (porosity_dict, objects_porosity, porosity)]
+
+    for charact_dict, objects, characts in for_charact_dict:
+        for object_name, charact in zip(objects, characts):
+            charact_value, charact_num_def = get_charact_info_from_str(charact)
+
+            if object_name in charact_dict:
+                if charact_num_def >= charact_dict[object_name][1]:
+                    charact_dict[object_name] = (charact_value, charact_num_def)
+            else:
+                charact_dict[object_name] = (charact_value, charact_num_def)
 
     if not objects_oil_deposit:
         print('Object_oil_deposit не нашлись(')
@@ -179,33 +260,66 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
             else:
                 with_kern = ''
 
-            objects_oil_deposit.append((object_name, int(object_count), with_kern))
+            object_characts = ['', '']
+            for idx, charact_dict in enumerate((oil_sat_dict, porosity_dict)):
+                if object_name in charact_dict:
+                    object_characts[idx] = charact_dict[object_name][0]
 
-        report_dict = {'Месторождение': [field], 'Год открытия': [open_date],
-                       'Год начала эксплуатации': [exploit_date], 'Местоположение': [location],
-                       'объекты': [objects_oil_deposit[0][0]], 'количество залежей': [objects_oil_deposit[0][1]],
-                       'керн': [objects_oil_deposit[0][2]]}
-        report_df = pd.DataFrame(data=report_dict)
-        for i in objects_oil_deposit[1:]:
-            report_df = pd.concat((
-                report_pd,
-                pd.DataFrame({
-                    'объекты': i[0],
-                    'количество залежей': i[1],
-                    'керн': i[2]
-                })
-            ))
-            # report_df = report_df.append(
-            #     {
-            #         'объекты': i[0],
-            #         'количество залежей': i[1],
-            #         'керн': i[2]
-            #     },
-            #     ignore_index=True
-            # )
+            objects_oil_deposit.append((object_name, int(object_count), with_kern, *object_characts))
+        if open_date and exploit_date and location:
+            report_dict = {'Месторождение': [field], 'Год открытия': [open_date],
+                           'Год начала эксплуатации': [exploit_date], 'Местоположение': [location],
+                           'объекты': [objects_oil_deposit[0][0]], 'количество залежей': [objects_oil_deposit[0][1]],
+                           'керн': [objects_oil_deposit[0][2]], 'нефтенасыщенность': [objects_oil_deposit[0][3]],
+                           'пористость': [objects_oil_deposit[0][4]]}
+            report_df = pd.DataFrame(data=report_dict)
 
-        report_df.to_excel(f"..//reports//xlsx//{field_name}.xlsx")
+            for object_info in objects_oil_deposit[1:]:
+                report_df = pd.concat((
+                    report_df,
+                    pd.DataFrame({
+                        'объекты': [object_info[0]],
+                        'количество залежей': [object_info[1]],
+                        'керн': [object_info[2]],
+                        'нефтенасыщенность': [object_info[3]],
+                        'пористость': [object_info[4]]
+                    })
+                ))
+
+            report_df.to_excel(f"..//reports//xlsx//{field_name}.xlsx")
 
 
-# if __name__ == '__main__':
-#     get_objects_with_kern(r'..//reports//pdfs//Архангельское_месторождение_Пересчет_запасов_КГ.pdf', (78, 79))
+if __name__ == '__main__':
+    path_to_test = join('..', 'reports', 'xml', 'test_porosity_and_oil_sat_a')
+    paths = [join(path_to_test, f'chapter{i}.xml') for i in range(14)]
+    report_xml_to_xlsx(paths, 'archangelsk')
+
+    # for i in range(14):
+    #     convert_chapter_pdf_to_xml('', 0, 0, i,
+    #                                'test_porosity_and_oil_sat_a',
+    #                                f'../reports/txt/archangelsk/upd/{i}upd.txt')
+
+    # for i in range(15):
+    #     convert_chapter_pdf_to_xml('', 0, 0, i,
+    #                                'test_porosity_and_oil_sat_i',
+    #                                f'../reports/txt/ivinskoe/upd/{i}upd.txt')
+    #
+    # for i in range(15):
+    #     convert_chapter_pdf_to_xml('', 0, 0, i,
+    #                                'test_porosity_and_oil_sat_sh',
+    #                                f'../reports/txt/sherbenskoe/upd/{i}upd.txt')
+    #
+    # for i in (CONTENT_G1 + CONTENT_G2):
+    #     convert_chapter_pdf_to_xml('', 0, 0, i,
+    #                                'test_porosity_and_oil_sat_g',
+    #                                f'../reports/txt/granichnoe/upd/{i}upd.txt')
+    #
+    # for i in (CONTENT_B1 + CONTENT_B2):
+    #     convert_chapter_pdf_to_xml('', 0, 0, i,
+    #                                'test_porosity_and_oil_sat_b',
+    #                                f'../reports/txt/baydankinskoe/upd/{i}upd.txt')
+    #
+    # for i in range(7):
+    #     convert_chapter_pdf_to_xml('', 0, 0, i,
+    #                                'test_porosity_and_oil_sat_ac',
+    #                                f'../reports/txt/acanskoe/upd/{i}upd.txt')
