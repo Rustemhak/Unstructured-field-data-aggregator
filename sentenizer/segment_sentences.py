@@ -11,5 +11,6 @@ def segment_to_sent(text: str) -> list:
     doc = Doc(text)
     doc.segment(segmenter)
     sentences = [_.text for _ in doc.sents]
-    sentences = [sent.split(';') if ';' in sent and ':' in sent else sent for sent in sentences ]
+    # пока отключим подсегментацию для лучшего поддержания контекста
+    # sentences = [sent.split(';') if ';' in sent and ':' in sent else sent for sent in sentences ]
     return sentences
