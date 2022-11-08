@@ -181,3 +181,13 @@ def get_oil_sat(text):
         # отдельно ГИС
         # elif False:
         #     pass
+
+
+if __name__ == '__main__':
+    path_to_upd_txt = join('..', 'reports', 'txt', 'archangelsk', 'upd')
+    paths_to_upd_txt = [join(path_to_upd_txt, f'{i}upd.txt') for i in range(14)]
+    for path in paths_to_upd_txt:
+        print(path)
+        with open(path, 'r', encoding='utf-8') as file:
+            text = file.read()
+        get_oil_sat(text)

@@ -2,7 +2,7 @@ import pandas as pd
 import pdfplumber
 from yargy import Parser
 
-from read_report import clean_text_from_pdf
+from read_report.read_report import clean_text_from_report
 from read_tables.res_test_table import read_table_res_test_short
 from rules.kern_rule import KERN
 from yargy_utils import TOKENIZER
@@ -31,7 +31,7 @@ def recognize_to_read_table(path: str, idx_beg: int, idx_end: int, clean: bool =
                 page = pdf.pages[i]
                 if page:
                     text = page.dedupe_chars().extract_text(y_tolerance=6)
-                    text = clean_text_from_pdf(text)
+                    text = clean_text_from_report(text)
                     matches = list(parser.findall(text))
                     if matches:
                         page_idx.append(i)

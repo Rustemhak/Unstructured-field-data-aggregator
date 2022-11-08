@@ -130,8 +130,8 @@ def set_tag_attr_object_charact(chapter: ET.SubElement, tag_name: str) -> None:
             charact_model = CharactModel(list_of_object_charact[0].fact)
             sentence.set(tag_name, str(charact_model))
 
-            if charact_model.fact.object_name:
-                object_name = charact_model.fact.object_name
+            # if charact_model.fact.object_name:
+            #     object_name = charact_model.fact.object_name
 
             sentence.set(f'object_{tag_name}', object_name)
 

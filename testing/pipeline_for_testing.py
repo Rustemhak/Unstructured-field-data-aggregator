@@ -290,8 +290,8 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
 
 
 if __name__ == '__main__':
-    path_to_test = join('..', 'reports', 'xml', 'test_porosity_and_oil_sat_a')
-    paths = [join(path_to_test, f'chapter{i}.xml') for i in range(14)]
+    path_to_test = join('..', 'reports', 'xml', 'archangelsk')
+    paths = [join(path_to_test, f'chapter{i}.xml') for i in range(7)]
     report_xml_to_xlsx(paths, 'archangelsk')
 
     # for i in range(14):
