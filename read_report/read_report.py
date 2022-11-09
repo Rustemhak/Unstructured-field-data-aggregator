@@ -1,5 +1,7 @@
 import textract
 from cleantext import clean
+import pythoncom
+from convert_doc_to_docx import save_as_docx
 
 from read_report import read_pdf
 
@@ -36,6 +38,10 @@ def read_report(path, idx_beg=None, idx_end=None, clean=True) -> str:
         text = read_pdf(path, idx_beg, idx_end)
     elif path.endswith('.docx'):
         text = textract.process(path, language='rus+eng').decode('utf-8')
+    elif path.lower().endswith('.doc'):
+        pythoncom.CoInitialize()
+        save_as_docx(path)
+        path = path.replace('doc', 'docx')
     if clean:
         return clean_text_from_report(text)
     return text
