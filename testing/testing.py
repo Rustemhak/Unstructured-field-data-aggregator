@@ -76,7 +76,7 @@ def converting_txt_to_xml(content_name: str, field_name: str, path_to_upd_txt: s
     print("Success .////.")
 
 
-def get_modifed(string: str):
+def get_modifed(string: str, language: str):
     """Возвращает модифицированную строку. Приводит строку к английским буквам."""
     eq = {
         'o': 'о', 'e': 'е',
@@ -86,7 +86,12 @@ def get_modifed(string: str):
     }
     if string:
         for en, ru in eq.items():
-            string = string.replace(ru, en)
+            if language == 'en':
+                string = string.replace(ru, en)
+            elif language == 'ru':
+                string = string.replace(en, ru)
+            else:
+                raise AttributeError(f"attribute language expected 'ru' or 'en', but got {language}")
 
         return string
     return None
@@ -119,14 +124,14 @@ def save_objects_with_kern(path_name: str, content_name: str or tuple[int], fiel
         list_of_codes_objects = list(kern_dataframe[list_of_columns[0]])
 
         for i in range(len(list_of_codes_objects)):
-            list_of_codes_objects[i] = get_modifed(list_of_codes_objects[i])
+            list_of_codes_objects[i] = get_modifed(list_of_codes_objects[i], 'en')
 
         object_code_dataframe = pd.read_excel(join('..', 'reports', 'xlsx', 'Layers_codes.xlsx'), usecols='M,N')
         codes = list(object_code_dataframe['stratigraphic_index'])
         objects = list(object_code_dataframe['horizon'])
 
         for i in range(len(codes)):
-            codes[i] = get_modifed(codes[i])
+            codes[i] = get_modifed(codes[i], 'en')
 
         code_object_dict = {}
 
@@ -183,7 +188,8 @@ def converting_xml_to_xlsx(field_name: str, content: [], in_field=lambda x: True
 
 
 def testing(path_name: str or [str], content_name: str or [str], field_name: str,
-            content: [int or float], in_field=lambda x: True, kern_pages=None, kern=True) -> None:
+            content: [int or float], in_field=lambda x: True, kern_pages=None, kern=True,
+            path_to_upd_txt=None) -> None:
     """
     Пайплайн для обработки отчета из pdf документа в результирующую xlsx таблицу
     Для обработки сразу нескольких pdf файлов по одному месторождению можно передать
@@ -196,11 +202,12 @@ def testing(path_name: str or [str], content_name: str or [str], field_name: str
     :param in_field: Функция, возвращающая True если объект входит в перечень объектов месторождения
     :param kern_pages: Диапазон отчета (idx_beg, idx_end, path_name), где находится таблица по керну
     :param kern: Нужно ли извлекать таблицу по керну
+    :param path_to_upd_txt: Путь к папке, где расположены обработаные txt файлы
     """
     if not isinstance(path_name, list):
-        path_name = [].append(path_name)
+        path_name = [path_name]
     if not isinstance(content_name, list):
-        content_name = [].append(content_name)
+        content_name = [content_name]
 
     if kern_pages and kern:
         save_objects_with_kern(kern_pages[2], kern_pages[:2], field_name)
@@ -208,62 +215,69 @@ def testing(path_name: str or [str], content_name: str or [str], field_name: str
     for path_n, content_n in zip(path_name, content_name):
         if not kern_pages and kern:
             save_objects_with_kern(path_n, content_n, field_name)
-        converting_pdf_to_txt(path_n, content_n, field_name)
-        path_to_upd_txt = replacing_words(path_n, content_n, field_name)
+        if not path_to_upd_txt:
+            converting_pdf_to_txt(path_n, content_n, field_name)
+            path_to_upd_txt = replacing_words(path_n, content_n, field_name)
         converting_txt_to_xml(content_n, field_name, path_to_upd_txt)
 
     converting_xml_to_xlsx(field_name, content, in_field)
-
-    # if isinstance(content[0], list):
-    #     for con in content:
-    #         converting_xml_to_xlsx(field_name, con, path_name, full_content, in_field)
-    # else:
-    #     converting_xml_to_xlsx(field_name, content, path_name, full_content, in_field)
 
 
 if __name__ == '__main__':
     # save_objects_with_kern('path_i1', (84, 84), 'ivinskoe')
     # save_objects_with_kern('path_a1', (78, 78), 'archangelsk')
 
-    converting_txt_to_xml('content_a1', 'archangelsk', join('..', 'reports', 'txt', 'archangelsk', 'upd'))
+    # converting_txt_to_xml('content_a1', 'archangelsk', join('..', 'reports', 'txt', 'archangelsk', 'upd'))
 
     # testing(
     #     ['path_a1', 'path_a2'],
     #     ['content_a1', 'content_a2'],
     #     'archangelsk',
     #     CONTENT_A1 + CONTENT_A2,
-    #     in_archangel_field,
-    #     kern=False
+    #     in_field=in_archangel_field,
+    #     kern=False,
+    #     path_to_upd_txt=join('..', 'reports', 'txt', 'archangelsk', 'upd')
     # )
     # testing(
     #     'path_i1',
     #     'content_i1',
     #     'ivinskoe',
-    #     CONTENT_I
+    #     CONTENT_I,
+    #     kern=False,
+    #     path_to_upd_txt=join('..', 'reports', 'txt', 'ivinskoe', 'upd')
     # )
     # testing(
     #     'path_sh1',
-    #     'content_sh',
+    #     'content_sh1',
     #     'sherbenskoe',
-    #     CONTENT_SH
+    #     CONTENT_SH,
+    #     kern=False,
+    #     path_to_upd_txt=join('..', 'reports', 'txt', 'sherbenskoe', 'upd')
     # )
+    converting_xml_to_xlsx('sherbenskoe', CONTENT_SH)
     # testing(
     #     ['path_b1', 'path_b2'],
     #     ['content_b1', 'content_b2'],
     #     'baydankinskoe',
-    #     (CONTENT_B1, CONTENT_B2)
+    #     CONTENT_B1 + CONTENT_B2,
+    #     kern=False,
+    #     path_to_upd_txt=join('..', 'reports', 'txt', 'baydankinskoe', 'upd')
     # )
     # testing(
     #     'path_ac',
-    #     'content_ac',
+    #     'content_ac1',
     #     'acanskoe',
-    #     CONTENT_AC
+    #     CONTENT_AC,
+    #     kern=False,
+    #     path_to_upd_txt=join('..', 'reports', 'txt', 'acanskoe', 'upd')
     # )
     # testing(
     #     ['path_g1', 'path_g2'],
     #     ['content_g1', 'content_g2'],
     #     'granichnoe',
-    #     CONTENT_G1
+    #     CONTENT_G1,
+    #     kern=False,
+    #     path_to_upd_txt=join('..', 'reports', 'txt', 'granichnoe', 'upd')
     # )
 
     # save_objects_with_kern('path_a1', (78, 78), 'archangelsk')

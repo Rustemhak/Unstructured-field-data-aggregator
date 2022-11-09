@@ -56,7 +56,7 @@ def set_tag_attr_oil_deposit(chapter: ET.SubElement) -> None:
             match = matches[0]
             for match in matches:
                 fact = match.fact
-                show_json(fact.as_json)
+                # show_json(fact.as_json)
                 sentence.set('oil_deposit', eval('oil_deposit__str__')(fact))
             from yargy.interpretation import fact, attribute
 
@@ -73,5 +73,5 @@ def set_tag_attr_oil_deposit(chapter: ET.SubElement) -> None:
                 match = matches[0]
                 for idx, match in enumerate(matches):
                     fact = match.fact
-                    show_json(fact.as_json)
+                    # show_json(fact.as_json)
                     sentence.set(f'object_oil_deposit_{idx}', eval('object_oil_deposit__str__')(fact))

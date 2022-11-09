@@ -66,7 +66,7 @@ def get_porosity(text):
     if matches:
         # вторым парсером возьму раздельные факты
         tokens = list(select_span_tokens(tokens, spans))
-        print([_.value for _ in tokens])
+        # print([_.value for _ in tokens])
 
         # пример из кол-ва залежей (см.)
         OBJECTS = morph_pipeline(objects)
@@ -154,24 +154,27 @@ def get_porosity(text):
         matches3 = list(parser3.findall(tokens))
         if matches1:
             match = matches1[0]
-            for match in matches1:
-                print('1pars', match)
-                fact = match.fact
-                show_json(fact.as_json)
+            # print(f'\nmatches1, len = {len(matches1)}\n')
+            # for match in matches1:
+            #     print('1pars', match)
+            #     fact = match.fact
+            #     show_json(fact.as_json)
             return matches1
         elif matches2:
             match = matches2[0]
-            for match in matches2:
-                print('2pars', match)
-                fact = match.fact
-                show_json(fact.as_json)
+            # print(f'\nmatches2, len = {len(matches2)}\n')
+            # for match in matches2:
+            #     print('2pars', match)
+            #     fact = match.fact
+            #     show_json(fact.as_json)
             return matches2
         elif matches3:
             match = matches3[0]
-            for match in matches3:
-                print('3pars', match)
-                fact = match.fact
-                show_json(fact.as_json)
+            # print(f'\nmatches3, len = {len(matches3)}\n')
+            # for match in matches3:
+            #     print('3pars', match)
+            #     fact = match.fact
+            #     show_json(fact.as_json)
             return matches3
         # отдельно ГИС
         # elif False:

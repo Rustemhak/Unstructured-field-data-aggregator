@@ -2,6 +2,10 @@ import xml.etree.ElementTree as ET
 from yargy import Parser
 
 from models.characteristics import *
+from rules.objects_rule import HORIZON, STAGE
+from rules.oil_sat_rule import get_oil_sat
+from rules.porosity_rule import get_porosity
+from yargy_utils import TOKENIZER
 
 models_dict = {'field': FieldName,
                'location': Location,
@@ -82,3 +86,61 @@ def set_xml_tag_sentences(sentences: list, chapter: ET.SubElement):
             sentence.set('ID', str(i))
             # print('no list', type(sent))
             sentence.text = sent
+
+
+horizon_parser = Parser(HORIZON, tokenizer=TOKENIZER)
+stage_parser = Parser(STAGE, tokenizer=TOKENIZER)
+
+
+def set_tag_attr_object_charact(chapter: ET.SubElement, tag_name: str) -> None:
+    """
+    Устанавливает атрибут-характеристику для объектов: нефтенасыщенность или пористость
+
+    :param chapter: глава из XML-файла
+    :param tag_name: имя тега характеристики: oil_sat or porosity
+    """
+    if tag_name == 'oil_sat':
+        charact_fun = get_oil_sat
+        CharactModel = OilSat
+    elif tag_name == 'porosity':
+        charact_fun = get_porosity
+        CharactModel = Porosity
+    else:
+        raise AttributeError(f"Attribute tag_name expected 'oil_sat' or 'porosity', but got {tag_name}")
+
+    object_name = ''
+
+    for sentence in chapter:
+        text = sentence.text
+
+        matches = list(stage_parser.findall(text))
+        if matches:
+            match = matches[-1]
+            fact = match.fact
+            object_name = fact.name
+
+        matches = list(horizon_parser.findall(text))
+        if matches:
+            match = matches[-1]
+            fact = match.fact
+            object_name = fact.name
+
+        list_of_object_charact = charact_fun(text)
+        if list_of_object_charact:
+            charact_model = CharactModel(list_of_object_charact[0].fact)
+            sentence.set(tag_name, str(charact_model))
+
+            if charact_model.fact.object_name:
+                object_name = charact_model.fact.object_name
+
+            sentence.set(f'object_{tag_name}', object_name)
+
+            # На случай, если в одном предложении будет больше одного значения нефтенасыщенности или пористости
+            # for idx, charact in enumerate(list_of_object_charact):
+            #     charact_model = CharactModel(charact.fact)
+            #     sentence.set(f'{tag_name}{idx}', str(charact_model))
+            #
+            #     if charact_model.fact.object_name:
+            #         object_name = charact_model.fact.object_name
+            #
+            # sentence.set('object', object_name)

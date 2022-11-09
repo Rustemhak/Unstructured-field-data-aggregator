@@ -1,3 +1,5 @@
+from os.path import join
+
 from yargy import rule, or_, Parser
 from yargy.interpretation import fact, attribute
 from yargy.pipelines import morph_pipeline
@@ -66,7 +68,7 @@ def get_oil_sat(text):
     if matches:
         # вторым парсером возьму раздельные факты
         tokens = list(select_span_tokens(tokens, spans))
-        print([_.value for _ in tokens])
+        # print([_.value for _ in tokens])
 
         # пример из кол-ва залежей (см.)
         OBJECTS = morph_pipeline(objects)
@@ -74,7 +76,7 @@ def get_oil_sat(text):
         NAMES = morph_pipeline(names)
         AVG = morph_pipeline(avg_list)
         VAL = morph_pipeline(value_list)
-        OIL_SAT_WORD = morph_pipeline(oil_sat_tokens)
+        OIL_SAT_WORD = morph_pipeline(oil_sat_list)
         GIS = morph_pipeline(gis_list)
         UNIT = morph_pipeline(unit_list)
         COEFF = morph_pipeline(coef)
@@ -154,24 +156,27 @@ def get_oil_sat(text):
         matches3 = list(parser3.findall(tokens))
         if matches1:
             match = matches1[0]
-            for match in matches1:
-                print('1pars', match)
-                fact = match.fact
-                show_json(fact.as_json)
+            # print(f'\nmatches1, len = {len(matches1)}\n')
+            # for match in matches1:
+            #     print('1pars', match)
+            #     fact = match.fact
+            #     show_json(fact.as_json)
             return matches1
         elif matches2:
             match = matches2[0]
-            for match in matches2:
-                print('2pars', match)
-                fact = match.fact
-                show_json(fact.as_json)
+            # print(f'\nmatches2, len = {len(matches2)}\n')
+            # for match in matches2:
+            #     print('2pars', match)
+            #     fact = match.fact
+            #     show_json(fact.as_json)
             return matches2
         elif matches3:
             match = matches3[0]
-            for match in matches3:
-                print('3pars', match)
-                fact = match.fact
-                show_json(fact.as_json)
+            # print(f'\nmatches3, len = {len(matches3)}\n')
+            # for match in matches3:
+            #     print('3pars', match)
+            #     fact = match.fact
+            #     show_json(fact.as_json)
             return matches3
         # отдельно ГИС
         # elif False:
