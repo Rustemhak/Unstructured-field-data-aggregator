@@ -126,6 +126,22 @@ content_g2 = [
     (229, 254, 13),
     (255, 256, 14)
 ]
+content_m = [
+    (0, 0, '0and16'),
+    (0, 0, '1-2'),
+    (0, 0, 3),
+    (0, 0, 4.1),
+    (0, 0, 4.2),
+    (0, 0, 5),
+    (0, 0, 6),
+    (0, 0, 7),
+    (0, 0, 8),
+    (0, 0, 9),
+    (0, 0, 10),
+    (0, 0, 11),
+    (0, 0, 12),
+    (0, 0, '13-15')
+]
 # полное содержание
 REPORTS_FOR_THE_TEST = {
     'content_a1': content_a1,
@@ -137,6 +153,7 @@ REPORTS_FOR_THE_TEST = {
     'content_ac1': content_ac,
     'content_g1': content_g1,
     'content_g2': content_g2,
+    'content_m': content_m
 }
 
 PATHS_FOR_REPORTS_PDF = {
@@ -173,7 +190,7 @@ CONTENT_B2 = [6, 7, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 9, 10, 11, 12, 13, 1
 CONTENT_AC = list(range(7))
 CONTENT_G1 = [0, 1, 2.1, 2.2, 2.3, 3, 4, 5]
 CONTENT_G2 = [6, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 8, 9, 10, 11, 12, 13, 14]
-CONTENT_M = [0, 1, 2, 3, 4.1, 4.2] + list(range(5, 17))
+CONTENT_M = ['0and16', '1-2', 3, 4.1, 4.2] + list(range(5, 13)) + ['13-15']
 
 CONTENTS = {
     'content_a1': CONTENT_A1,
@@ -186,11 +203,34 @@ CONTENTS = {
     'content_g1': CONTENT_G1,
     'content_g2': CONTENT_G2
 }
-path_to_docx_m = join('..', 'reports', 'docx', 'matrosovskoe')
+path_to_docx_m = join(
+    'D:\\For_Python',
+    'Unstructured-field-data-aggregator',
+    'reports',
+    'docx',
+    'matrosovskoe'
+)
 
 DOCX_PATHS = {
     'matrosovskoe': path_to_docx_m
 }
+
+DOCX_PATHS_M = [
+    'инф. справка, введение, заключение.docx',
+    'Гл. 1,2-геология.doc',
+    'Глава 3.docx',
+    'Отчет по геологической модели.docx',
+    'Отчёт по гидродинамике.docx',
+    'Глава 5.doc',
+    'Глава 6 Матросовское.doc',
+    'Глава 7.docx',
+    'Глава 8.docx',
+    'Глава 9.docx',
+    'Глава 10.docx',
+    'Гл. 11-контроль.doc',
+    'Гл. 12-доразведка.doc',
+    'Главы 13,14,15.doc'
+]
 
 CONTENT_DOCX_M = [
     (2, 3, 0, join(path_to_docx_m, 'инф. справка, введение, заключение.docx')),

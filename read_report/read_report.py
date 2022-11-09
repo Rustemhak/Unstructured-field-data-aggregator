@@ -1,12 +1,12 @@
 import textract
 from cleantext import clean
 import pythoncom
-from convert_doc_to_docx import save_as_docx
+from read_report.convert_doc_to_docx import save_as_docx
 
 from read_report import read_pdf
 
 
-def clean_text_from_report(text: str) -> str:
+def clean_text_from_report(text: str) -> str or None:
     """
     Очищает текст от служебных символов и соединяет слова, если присутсвует знак переноса
     :param text: сырой текст
@@ -41,7 +41,8 @@ def read_report(path, idx_beg=None, idx_end=None, clean=True) -> str:
     elif path.lower().endswith('.doc'):
         pythoncom.CoInitialize()
         save_as_docx(path)
-        path = path.replace('doc', 'docx')
+        path = path + 'x'
+        text = textract.process(path, language='rus+eng').decode('utf-8')
     if clean:
         return clean_text_from_report(text)
     return text

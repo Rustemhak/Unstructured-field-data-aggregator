@@ -30,18 +30,16 @@ def converting_pdf_to_txt(path_name: str, content_name: str, field_name: str) ->
         pdf_to_txt(path, idx_beg, idx_end, chapter_id, field_name)
 
 
-def converting_docx_to_txt(field_name: str) -> None:
+def converting_docx_to_txt(field_name: str, chapter_paths) -> None:
     print('converting docx to txt...')
     path_to_docx = DOCX_PATHS[field_name]
-    docx_paths = [join(path_to_docx, chapter_path) for chapter_path in listdir(path_to_docx)]
+    docx_paths = [join(path_to_docx, chapter_path) for chapter_path in chapter_paths]
     path_to_txt = join('..', 'reports', 'txt', field_name)
     if not isdir(path_to_txt):
         mkdir(path_to_txt)
-    for chapter_id, path in enumerate(docx_paths):
+    for chapter_id, path in zip(CONTENT_M, docx_paths):
         print(f"{chapter_id} из {len(docx_paths) - 1}")
         with open(join(path_to_txt, f'{chapter_id}raw.txt'), 'w', encoding='utf-8') as txt_file:
-            print(path)
-            print(read_report(path))
             txt_file.write(read_report(path))
 
 
@@ -57,12 +55,10 @@ def replacing_words(path_name: str, content: []) -> str:
     print('replacing words...')
     path_for_report_txt = PATHS_FOR_REPORTS_TXT[path_name].split('/')
     path_to_upd_txt = join(*path_for_report_txt, 'upd')
-    print(path_to_upd_txt)
 
     for i in content:
         print(f"{i} из {content[-1]}")
         chapter_path = join(*path_for_report_txt, f'{i}raw.txt')
-        print(chapter_path)
 
         raw_text = read_txt(chapter_path)
         upd_text = replace_short_name(raw_text, STAND_GEO_SHORT_NAMES)
@@ -76,7 +72,7 @@ def replacing_words(path_name: str, content: []) -> str:
     return path_to_upd_txt
 
 
-def converting_txt_to_xml(content_name: str, field_name: str, path_to_upd_txt: str) -> None:
+def converting_txt_to_xml(content_name: str, field_name: str, path_to_upd_txt: str, content: []) -> None:
     """
     Конвертировать txt файлы обработанного текса по месторождению в xml файлы
 
@@ -85,10 +81,10 @@ def converting_txt_to_xml(content_name: str, field_name: str, path_to_upd_txt: s
     :param path_to_upd_txt: Путь к папке с txt файлами обработанного текста по месторождению
     """
     print('converting txt to xml...')
-    content = REPORTS_FOR_THE_TEST[content_name]
-    paths_to_upd_txt = [join(path_to_upd_txt, f'{chapter[2]}upd.txt') for chapter in content]
-    for chapter, chapter_path in list(zip(content, paths_to_upd_txt)):
-        print(f"{chapter[-1]} из {content[-1][-1]}")
+    full_content = REPORTS_FOR_THE_TEST[content_name]
+    paths_to_upd_txt = [join(path_to_upd_txt, f'{chapter}upd.txt') for chapter in content]
+    for chapter, chapter_path in list(zip(full_content, paths_to_upd_txt)):
+        print(f"{chapter[-1]} из {full_content[-1][-1]}")
         convert_chapter_pdf_to_xml("", *chapter, field_name, chapter_path)
 
     print("Success .////.")
@@ -207,7 +203,7 @@ def converting_xml_to_xlsx(field_name: str, content: [], in_field=lambda x: True
 
 def testing(path_name: str or [str], content_name: str or [str], field_name: str,
             content: [int or float], in_field=lambda x: True, kern_pages=None, kern=True,
-            path_to_upd_txt=None) -> None:
+            path_to_upd_txt=None, is_pdf=True) -> None:
     """
     Пайплайн для обработки отчета из pdf документа в результирующую xlsx таблицу
     Для обработки сразу нескольких pdf файлов по одному месторождению можно передать
@@ -231,7 +227,7 @@ def testing(path_name: str or [str], content_name: str or [str], field_name: str
         save_objects_with_kern(kern_pages[2], kern_pages[:2], field_name)
 
     for path_n, content_n in zip(path_name, content_name):
-        if not kern_pages and kern:
+        if not kern_pages and kern and is_pdf:
             save_objects_with_kern(path_n, content_n, field_name)
         if not path_to_upd_txt:
             converting_pdf_to_txt(path_n, content_n, field_name)
@@ -242,8 +238,14 @@ def testing(path_name: str or [str], content_name: str or [str], field_name: str
 
 
 if __name__ == '__main__':
-    converting_docx_to_txt('matrosovskoe')
-    # replacing_words('path_m', CONTENT_M)
+    # converting_docx_to_txt('matrosovskoe', DOCX_PATHS_M)
+    # converting_txt_to_xml(
+    #     'content_m',
+    #     'matrosovskoe',
+    #     replacing_words('path_m', CONTENT_M),
+    #     CONTENT_M
+    # )
+    # converting_xml_to_xlsx('matrosovskoe', CONTENT_M)
 
     # save_objects_with_kern('path_i1', (84, 84), 'ivinskoe')
     # save_objects_with_kern('path_a1', (78, 78), 'archangelsk')
@@ -256,6 +258,15 @@ if __name__ == '__main__':
     # replacing_words('path_a2', CONTENT_A2)
 
     # converting_xml_to_xlsx('archangelsk', CONTENT_A1 + CONTENT_A2)
+
+    testing(
+        'path_m',
+        'content_m',
+        'matrosovskoe',
+        CONTENT_M,
+        path_to_upd_txt=join('..', 'reports', 'txt', 'matrosovskoe', 'upd'),
+        is_pdf=False
+    )
 
     # testing(
     #     ['path_a1', 'path_a2'],
