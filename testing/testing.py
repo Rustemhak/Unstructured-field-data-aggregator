@@ -8,6 +8,7 @@ from yargy import Parser, rule
 from converting.convert_pdf_txt import pdf_to_txt, read_txt
 from pipeline_for_testing import convert_chapter_pdf_to_xml, report_xml_to_xlsx, get_objects_with_kern
 from preprocessing_text import replace_short_name, STAND_GEO_SHORT_NAMES
+from read_report.read_report import read_report
 from read_tables.kern_table import recognize_to_read_table
 from in_field_functions import in_archangel_field
 from testing_constant import *
@@ -29,22 +30,39 @@ def converting_pdf_to_txt(path_name: str, content_name: str, field_name: str) ->
         pdf_to_txt(path, idx_beg, idx_end, chapter_id, field_name)
 
 
-def replacing_words(path_name: str, content_name: str, field_name: str) -> str:
+def converting_docx_to_txt(field_name: str) -> None:
+    print('converting docx to txt...')
+    path_to_docx = DOCX_PATHS[field_name]
+    docx_paths = [join(path_to_docx, chapter_path) for chapter_path in listdir(path_to_docx)]
+    path_to_txt = join('..', 'reports', 'txt', field_name)
+    if not isdir(path_to_txt):
+        mkdir(path_to_txt)
+    for chapter_id, path in enumerate(docx_paths):
+        print(f"{chapter_id} из {len(docx_paths) - 1}")
+        with open(join(path_to_txt, f'{chapter_id}raw.txt'), 'w', encoding='utf-8') as txt_file:
+            print(path)
+            print(read_report(path))
+            txt_file.write(read_report(path))
+
+
+def replacing_words(path_name: str, content: []) -> str:
     """
     Обработать текст txt файлов по месторождению и сохранить в новые txt файлы.
     Вернуть путь к папке с получившимися файлами
 
     :param path_name: Имя пути к отчету (Example: 'path_a1')
-    :param content_name: Имя содержания отчета (Example: 'content_a1')
-    :param field_name: Имя месторождения (Example: 'archangelsk')
+    :param content: Cодержания отчета (перечень номеров глав)
     :return: Путь к папке с txt файлами обработанного текса
     """
     print('replacing words...')
-    path_to_upd_txt = join(
-        *PATHS_FOR_REPORTS_TXT[path_name].replace(field_name, f'{field_name}/upd').split('/')[:-1])
-    for i in [i[2] for i in REPORTS_FOR_THE_TEST[content_name]]:
-        print(f"{i} из {REPORTS_FOR_THE_TEST[content_name][-1][-1]}")
-        chapter_path = f"{PATHS_FOR_REPORTS_TXT[path_name]}_{i}.txt"
+    path_for_report_txt = PATHS_FOR_REPORTS_TXT[path_name].split('/')
+    path_to_upd_txt = join(*path_for_report_txt, 'upd')
+    print(path_to_upd_txt)
+
+    for i in content:
+        print(f"{i} из {content[-1]}")
+        chapter_path = join(*path_for_report_txt, f'{i}raw.txt')
+        print(chapter_path)
 
         raw_text = read_txt(chapter_path)
         upd_text = replace_short_name(raw_text, STAND_GEO_SHORT_NAMES)
@@ -52,7 +70,7 @@ def replacing_words(path_name: str, content_name: str, field_name: str) -> str:
 
         if not isdir(path_to_upd_txt):
             mkdir(path_to_upd_txt)
-        with open(f'{path_to_upd_txt}\\{i}upd.txt', "w", encoding="utf-8") as upd_file:
+        with open(join(path_to_upd_txt, f'{i}upd.txt'), "w", encoding="utf-8") as upd_file:
             upd_file.write(upd_text)
 
     return path_to_upd_txt
@@ -178,7 +196,7 @@ def converting_xml_to_xlsx(field_name: str, content: [], in_field=lambda x: True
     Конвертировать xml файлы в xlsx таблицу с результатами алгоритма
 
     :param field_name: Имя месторождения (Example: 'archangelsk')
-    :param content: Имя содержания отчета (Example: 'content_a1')
+    :param content: содержание отчета (перечень глав)
     :param in_field: Функция, возвращающая True если объект входит в перечень объектов месторождения
     """
     path_to_xml = join('..', 'reports', 'xml', field_name)
@@ -217,17 +235,27 @@ def testing(path_name: str or [str], content_name: str or [str], field_name: str
             save_objects_with_kern(path_n, content_n, field_name)
         if not path_to_upd_txt:
             converting_pdf_to_txt(path_n, content_n, field_name)
-            path_to_upd_txt = replacing_words(path_n, content_n, field_name)
+            path_to_upd_txt = replacing_words(path_n, content)
         converting_txt_to_xml(content_n, field_name, path_to_upd_txt)
 
     converting_xml_to_xlsx(field_name, content, in_field)
 
 
 if __name__ == '__main__':
+    converting_docx_to_txt('matrosovskoe')
+    # replacing_words('path_m', CONTENT_M)
+
     # save_objects_with_kern('path_i1', (84, 84), 'ivinskoe')
     # save_objects_with_kern('path_a1', (78, 78), 'archangelsk')
 
     # converting_txt_to_xml('content_a1', 'archangelsk', join('..', 'reports', 'txt', 'archangelsk', 'upd'))
+
+    # converting_pdf_to_txt('path_a1', 'content_a1', 'archangelsk')
+    # converting_pdf_to_txt('path_a2', 'content_a2', 'archangelsk')
+    # replacing_words('path_a1', CONTENT_A1)
+    # replacing_words('path_a2', CONTENT_A2)
+
+    # converting_xml_to_xlsx('archangelsk', CONTENT_A1 + CONTENT_A2)
 
     # testing(
     #     ['path_a1', 'path_a2'],
@@ -254,7 +282,7 @@ if __name__ == '__main__':
     #     kern=False,
     #     path_to_upd_txt=join('..', 'reports', 'txt', 'sherbenskoe', 'upd')
     # )
-    converting_xml_to_xlsx('sherbenskoe', CONTENT_SH)
+    # converting_xml_to_xlsx('sherbenskoe', CONTENT_SH)
     # testing(
     #     ['path_b1', 'path_b2'],
     #     ['content_b1', 'content_b2'],
@@ -279,19 +307,3 @@ if __name__ == '__main__':
     #     kern=False,
     #     path_to_upd_txt=join('..', 'reports', 'txt', 'granichnoe', 'upd')
     # )
-
-    # save_objects_with_kern('path_a1', (78, 78), 'archangelsk')
-    # save_objects_with_kern('path_i1', 'content_i1', 'ivinskoe')
-    # save_objects_with_kern('path_sh1', 'content_sh1', 'sherbenskoe')
-    # save_objects_with_kern('path_b1', 'content_b1', 'baydankinskoe')
-    # save_objects_with_kern('path_b2', 'content_b2', 'baydankinskoe')
-    # save_objects_with_kern('path_ac', 'content_ac1', 'acanskoe')
-    # save_objects_with_kern('path_g1', 'content_g1', 'granichnoe')
-    # save_objects_with_kern('path_g2', 'content_g2', 'granichnoe')
-
-    # converting_xml_to_xlsx('archangelsk', CONTENT_A1 + CONTENT_A2, in_archangel_field)
-    # converting_xml_to_xlsx('ivinskoe', CONTENT_I)
-    # converting_xml_to_xlsx('sherbenskoe', CONTENT_SH)
-    # converting_xml_to_xlsx('baydankinskoe', CONTENT_B1 + CONTENT_B2)
-    # converting_xml_to_xlsx('acanskoe', CONTENT_AC)
-    # converting_xml_to_xlsx('granichnoe', CONTENT_G1 + CONTENT_G2)
