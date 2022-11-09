@@ -59,3 +59,4 @@ def get_KIN(text):
                 for match in matches_object:
                     fact = match.fact
                     show_json(fact.as_json)
+            return matches_object

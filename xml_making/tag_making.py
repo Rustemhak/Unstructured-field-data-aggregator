@@ -2,6 +2,7 @@ import xml.etree.ElementTree as ET
 from yargy import Parser
 
 from models.characteristics import *
+from rules.kin_rule import get_KIN
 from rules.objects_rule import HORIZON, STAGE
 from rules.oil_sat_rule import get_oil_sat
 from rules.porosity_rule import get_porosity
@@ -144,3 +145,18 @@ def set_tag_attr_object_charact(chapter: ET.SubElement, tag_name: str) -> None:
             #         object_name = charact_model.fact.object_name
             #
             # sentence.set('object', object_name)
+
+
+def set_tag_attr_kin(chapter: ET.SubElement) -> None:
+    """
+    Устанавливает атрибут кин
+
+    :param chapter: глава из XML-файла
+    """
+    for sentence in chapter:
+        text = sentence.text
+        list_of_kin = get_KIN(text)
+        if list_of_kin:
+            for idx, match in enumerate(list_of_kin):
+                sentence.set(f'object_name_kin_{idx}', match.fact.object_name_kin)
+                sentence.set(f'kin_value_{idx}', match.fact.kin_value)

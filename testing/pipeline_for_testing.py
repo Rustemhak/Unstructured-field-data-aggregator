@@ -13,12 +13,14 @@ from read_report import read_pdf
 from rules.date_exploit_rule import EXPLOIT_DATE
 from rules.date_open_rule import OPEN_DATE
 from rules.field_rule import FIELD, NAME
+from rules.kin_rule import get_KIN
 from rules.location_rule import LOC
 from rules.oil_deposit_rule import set_tag_attr_oil_deposit
 from sentenizer.segment_sentences import segment_to_sent
-from testing_constant import CONTENT_G1, CONTENT_G2, CONTENT_B1, CONTENT_B2
+from testing_constant import CONTENT_G1, CONTENT_G2, CONTENT_B1, CONTENT_B2, REPORTS_FOR_THE_TEST, \
+    PATHS_FOR_REPORTS_PDF, CONTENT_A1, CONTENT_A2
 from xml_making.tag_making import set_xml_tag_sentences, set_tag_attr, set_tag_attr_for_field, \
-    set_tag_attr_object_charact
+    set_tag_attr_object_charact, set_tag_attr_kin
 from yargy_utils import TOKENIZER
 
 
@@ -88,7 +90,8 @@ def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: i
     chapter.set('ID', str(chap_id))
     # chapter.text = text
 
-    text = replace_short_name(text, STAND_GEO_SHORT_NAMES)
+    if not path_txt:
+        text = replace_short_name(text, STAND_GEO_SHORT_NAMES)
     sentences = segment_to_sent(text)
 
     set_xml_tag_sentences(sentences, chapter)
@@ -110,6 +113,8 @@ def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: i
 
     set_tag_attr_object_charact(chapter, 'oil_sat')
     set_tag_attr_object_charact(chapter, 'porosity')
+
+    set_tag_attr_kin(chapter)
 
     tree = ET.ElementTree(report)
     indent(report)
@@ -179,7 +184,11 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
         chapter_pd = chapter_xml_to_pd(chapter_path)
         report_pd = pd.concat((report_pd, chapter_pd))
 
-    field = report_pd['field'].dropna().unique()[0]
+    try:
+        field = report_pd['field'].dropna().unique()[0]
+    except KeyError:
+        field = None
+        print('Название месторождения не найдено')
     try:
         exploit_date = report_pd['exploit_date'].dropna().unique()[0]
     except KeyError:
@@ -197,10 +206,36 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
         print("Местоположение не найдено")
 
     list_of_columns_object = []
+    list_of_columns_kin_object = []
+    list_of_columns_kin_value = []
+
     for column in list(report_pd.columns):
         if 'object_oil_deposit' in column:
             list_of_columns_object.append(column)
+        if 'object_name_kin' in column:
+            list_of_columns_kin_object.append(column)
+        if 'kin_value' in column:
+            list_of_columns_kin_value.append(column)
+
     objects_oil_deposit = [list(report_pd[column].dropna().items()) for column in list_of_columns_object]
+    objects_kin = []
+    kin_values = []
+    for column_object, column_value in zip(list_of_columns_kin_object, list_of_columns_kin_value):
+        objects_kin.append(*(report_pd[column_object].dropna()))
+        kin_values.append(*(report_pd[column_value].dropna()))
+
+    for idx, object_name in enumerate(objects_kin):
+        upd_name = object_name.replace(' горизонт', '').replace(' ярус', '')
+        if '+' in upd_name:
+            idx_beg = upd_name.find('+')
+            upd_name = upd_name[:idx_beg - 2] + 'о-' + upd_name[idx_beg + 1:]
+        objects_kin[idx] = upd_name
+
+    kin_values_for_object = {}
+    if objects_kin and kin_values:
+        for object_name, kin_value in zip(objects_kin, kin_values):
+            if object_name not in kin_values_for_object:
+                kin_values_for_object[object_name] = kin_value
 
     objects_with_kern = get_objects_with_kern(field_name)
     if objects_with_kern:
@@ -265,13 +300,18 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
                 if object_name in charact_dict:
                     object_characts[idx] = charact_dict[object_name][0]
 
-            objects_oil_deposit.append((object_name, int(object_count), with_kern, *object_characts))
+            if object_name in kin_values_for_object:
+                kin = kin_values_for_object[object_name]
+            else:
+                kin = ''
+
+            objects_oil_deposit.append((object_name, int(object_count), with_kern, *object_characts, kin))
         if open_date and exploit_date and location:
             report_dict = {'Месторождение': [field], 'Год открытия': [open_date],
                            'Год начала эксплуатации': [exploit_date], 'Местоположение': [location],
                            'объекты': [objects_oil_deposit[0][0]], 'количество залежей': [objects_oil_deposit[0][1]],
                            'керн': [objects_oil_deposit[0][2]], 'нефтенасыщенность': [objects_oil_deposit[0][3]],
-                           'пористость': [objects_oil_deposit[0][4]]}
+                           'пористость': [objects_oil_deposit[0][4]], 'КИН': [objects_oil_deposit[0][5]]}
             report_df = pd.DataFrame(data=report_dict)
 
             for object_info in objects_oil_deposit[1:]:
@@ -282,7 +322,8 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
                         'количество залежей': [object_info[1]],
                         'керн': [object_info[2]],
                         'нефтенасыщенность': [object_info[3]],
-                        'пористость': [object_info[4]]
+                        'пористость': [object_info[4]],
+                        'КИН': [object_info[5]]
                     })
                 ))
 
@@ -290,14 +331,17 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
 
 
 if __name__ == '__main__':
-    path_to_test = join('..', 'reports', 'xml', 'archangelsk')
-    paths = [join(path_to_test, f'chapter{i}.xml') for i in range(7)]
+    path_to_test = join('..', 'reports', 'xml', 'test_kin_a')
+    paths = [join(path_to_test, f'chapter{i}.xml') for i in [11.1, 11.2]]
     report_xml_to_xlsx(paths, 'archangelsk')
 
-    # for i in range(14):
-    #     convert_chapter_pdf_to_xml('', 0, 0, i,
-    #                                'test_porosity_and_oil_sat_a',
-    #                                f'../reports/txt/archangelsk/upd/{i}upd.txt')
+    # for chapter in REPORTS_FOR_THE_TEST['content_a2']:
+    #     convert_chapter_pdf_to_xml(PATHS_FOR_REPORTS_PDF['path_a2'], *chapter,
+    #                                'test_kin_a')
+
+    # for i in CONTENT_A1 + CONTENT_A2:
+    #     convert_chapter_pdf_to_xml('', 0, 0, i, 'test_kin_a',
+    #                                f"../reports/txt/archangelsk/upd/{i}upd.txt")
 
     # for i in range(15):
     #     convert_chapter_pdf_to_xml('', 0, 0, i,

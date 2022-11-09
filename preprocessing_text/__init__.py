@@ -1,6 +1,6 @@
 from .replace_words import *
 from yargy_utils import number_extractor
-STAND_GEO_SHORT_NAMES = {'скв.': 'скважина', 'мест.': 'месторождение'}
+STAND_GEO_SHORT_NAMES = {'скв.': 'скважина', 'мест.': 'месторождение', 'ед.': 'единиц'}
 
 
 if __name__ == '__main__':
