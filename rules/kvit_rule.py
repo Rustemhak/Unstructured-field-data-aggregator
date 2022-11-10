@@ -11,7 +11,7 @@ Kvit = fact('Kvit', ['object_name_kvit', 'kvit_value'])
 
 def get_kvit(text):
     """
-    examples: Текст отчета 2021 Том 1.docx, Глава 8.docx
+    examples: Текст_отчета_2021_Том_1.docx, Глава 8.docx
 
     :param text: текст предложения из отчёта
     :return: Kvit objects
@@ -57,8 +57,8 @@ def get_kvit(text):
             if matches_object:
                 for match in matches_object:
                     fact = match.fact
-                    print(text)
                     show_json(fact.as_json)
+            return matches_object
 
 
 """

@@ -30,14 +30,14 @@ def converting_pdf_to_txt(path_name: str, content_name: str, field_name: str) ->
         pdf_to_txt(path, idx_beg, idx_end, chapter_id, field_name)
 
 
-def converting_docx_to_txt(field_name: str, chapter_paths) -> None:
+def converting_docx_to_txt(field_name: str, chapter_paths, content) -> None:
     print('converting docx to txt...')
     path_to_docx = DOCX_PATHS[field_name]
     docx_paths = [join(path_to_docx, chapter_path) for chapter_path in chapter_paths]
     path_to_txt = join('..', 'reports', 'txt', field_name)
     if not isdir(path_to_txt):
         mkdir(path_to_txt)
-    for chapter_id, path in zip(CONTENT_M, docx_paths):
+    for chapter_id, path in zip(content, docx_paths):
         print(f"{chapter_id} из {len(docx_paths) - 1}")
         with open(join(path_to_txt, f'{chapter_id}raw.txt'), 'w', encoding='utf-8') as txt_file:
             txt_file.write(read_report(path))
@@ -72,7 +72,7 @@ def replacing_words(path_name: str, content: []) -> str:
     return path_to_upd_txt
 
 
-def converting_txt_to_xml(content_name: str, field_name: str, path_to_upd_txt: str, content: []) -> None:
+def converting_txt_to_xml(content_name: str, field_name: str, path_to_upd_txt: str) -> None:
     """
     Конвертировать txt файлы обработанного текса по месторождению в xml файлы
 
@@ -82,7 +82,7 @@ def converting_txt_to_xml(content_name: str, field_name: str, path_to_upd_txt: s
     """
     print('converting txt to xml...')
     full_content = REPORTS_FOR_THE_TEST[content_name]
-    paths_to_upd_txt = [join(path_to_upd_txt, f'{chapter}upd.txt') for chapter in content]
+    paths_to_upd_txt = [join(path_to_upd_txt, f'{chapter[2]}upd.txt') for chapter in full_content]
     for chapter, chapter_path in list(zip(full_content, paths_to_upd_txt)):
         print(f"{chapter[-1]} из {full_content[-1][-1]}")
         convert_chapter_pdf_to_xml("", *chapter, field_name, chapter_path)
@@ -231,6 +231,7 @@ def testing(path_name: str or [str], content_name: str or [str], field_name: str
             save_objects_with_kern(path_n, content_n, field_name)
         if not path_to_upd_txt:
             converting_pdf_to_txt(path_n, content_n, field_name)
+
             path_to_upd_txt = replacing_words(path_n, content)
         converting_txt_to_xml(content_n, field_name, path_to_upd_txt)
 
@@ -259,14 +260,14 @@ if __name__ == '__main__':
 
     # converting_xml_to_xlsx('archangelsk', CONTENT_A1 + CONTENT_A2)
 
-    testing(
-        'path_m',
-        'content_m',
-        'matrosovskoe',
-        CONTENT_M,
-        path_to_upd_txt=join('..', 'reports', 'txt', 'matrosovskoe', 'upd'),
-        is_pdf=False
-    )
+    # testing(
+    #     'path_m',
+    #     'content_m',
+    #     'matrosovskoe',
+    #     CONTENT_M,
+    #     path_to_upd_txt=join('..', 'reports', 'txt', 'matrosovskoe', 'upd'),
+    #     is_pdf=False
+    # )
 
     # testing(
     #     ['path_a1', 'path_a2'],
@@ -277,6 +278,26 @@ if __name__ == '__main__':
     #     kern=False,
     #     path_to_upd_txt=join('..', 'reports', 'txt', 'archangelsk', 'upd')
     # )
+    #
+    testing(
+        'path_a1_d',
+        'content_a1_d',
+        'archangelsk_d',
+        CONTENT_A1_D,
+        kern=False,
+        path_to_upd_txt=join('..', 'reports', 'txt', 'archangelsk_d', 'upd')
+    )
+
+    # testing(
+    #     'path_a2',
+    #     'content_a2',
+    #     'archangelsk',
+    #     CONTENT_A1 + CONTENT_A2,
+    #     in_field=in_archangel_field,
+    #     kern=False,
+    #     path_to_upd_txt=join('..', 'reports', 'txt', 'archangelsk', 'upd')
+    # )
+
     # testing(
     #     'path_i1',
     #     'content_i1',

@@ -142,6 +142,16 @@ content_m = [
     (0, 0, 12),
     (0, 0, '13-15')
 ]
+content_a1_d = [
+    (25, 26, 0),
+    (27, 29, 1),
+    (30, 66, 2.1),
+    (67, 129, 2.2),
+    (130, 178, 2.3),
+    (179, 199, 3.1),
+    (200, 262, 3.2),
+    (263, 277, 3.3)
+]
 # полное содержание
 REPORTS_FOR_THE_TEST = {
     'content_a1': content_a1,
@@ -153,7 +163,8 @@ REPORTS_FOR_THE_TEST = {
     'content_ac1': content_ac,
     'content_g1': content_g1,
     'content_g2': content_g2,
-    'content_m': content_m
+    'content_m': content_m,
+    'content_a1_d': content_a1_d
 }
 
 PATHS_FOR_REPORTS_PDF = {
@@ -165,7 +176,8 @@ PATHS_FOR_REPORTS_PDF = {
     'path_g2': '../reports/pdfs/2 Граничное.pdf',
     'path_b1': '../reports/pdfs/Книга 1 - Байданкинское.pdf',
     'path_b2': '../reports/pdfs/Книга 2 - Байданкинское.pdf',
-    'path_ac': '../reports/pdfs/Отчет_Аканское месторождение.pdf'
+    'path_ac': '../reports/pdfs/Отчет_Аканское месторождение.pdf',
+    'path_a1_d': '../reports/pdfs/Текст_отчета_2021_Том_1.pdf'
 }
 
 PATHS_FOR_REPORTS_TXT = {
@@ -178,19 +190,21 @@ PATHS_FOR_REPORTS_TXT = {
     'path_b1': '../reports/txt/baydankinskoe',
     'path_b2': '../reports/txt/baydankinskoe',
     'path_ac': '../reports/txt/acanskoe',
-    'path_m': '../reports/txt/matrosovskoe'
+    'path_m': '../reports/txt/matrosovskoe',
+    'path_a1_d': '../reports/txt/archangelsk_d'
 }
 
-CONTENT_A1 = list(range(8))
-CONTENT_A2 = [8, 9, 10, 11.1, 11.2, 12, 13]
-CONTENT_I = list(range(15))
-CONTENT_SH = list(range(15))
-CONTENT_B1 = [0, 1, 2.1, 2.2, 2.3, 3, 4, 5]
-CONTENT_B2 = [6, 7, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 9, 10, 11, 12, 13, 14]
-CONTENT_AC = list(range(7))
-CONTENT_G1 = [0, 1, 2.1, 2.2, 2.3, 3, 4, 5]
-CONTENT_G2 = [6, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 8, 9, 10, 11, 12, 13, 14]
-CONTENT_M = ['0and16', '1-2', 3, 4.1, 4.2] + list(range(5, 13)) + ['13-15']
+CONTENT_A1 = [i[2] for i in content_a1]
+CONTENT_A2 = [i[2] for i in content_a2]
+CONTENT_I = [i[2] for i in content_i1]
+CONTENT_SH = [i[2] for i in content_sh1]
+CONTENT_B1 = [i[2] for i in content_b1]
+CONTENT_B2 = [i[2] for i in content_b2]
+CONTENT_AC = [i[2] for i in content_ac]
+CONTENT_G1 = [i[2] for i in content_g1]
+CONTENT_G2 = [i[2] for i in content_g2]
+CONTENT_M = [i[2] for i in content_m]
+CONTENT_A1_D = [i[2] for i in content_a1_d]
 
 CONTENTS = {
     'content_a1': CONTENT_A1,
@@ -201,7 +215,9 @@ CONTENTS = {
     'content_b2': CONTENT_B2,
     'content_ac1': CONTENT_AC,
     'content_g1': CONTENT_G1,
-    'content_g2': CONTENT_G2
+    'content_g2': CONTENT_G2,
+    'content_m': CONTENT_M,
+    'content_a1_d': CONTENT_A1_D
 }
 path_to_docx_m = join(
     'D:\\For_Python',
@@ -211,8 +227,17 @@ path_to_docx_m = join(
     'matrosovskoe'
 )
 
+path_to_docx_a = join(
+    'D:\\For_Python',
+    'Unstructured-field-data-aggregator',
+    'reports',
+    'docx',
+    'archangelsk_d'
+)
+
 DOCX_PATHS = {
-    'matrosovskoe': path_to_docx_m
+    'matrosovskoe': path_to_docx_m,
+    'archangelsk_d': path_to_docx_a
 }
 
 DOCX_PATHS_M = [
@@ -230,6 +255,9 @@ DOCX_PATHS_M = [
     'Гл. 11-контроль.doc',
     'Гл. 12-доразведка.doc',
     'Главы 13,14,15.doc'
+]
+DOCX_PATHS_A = [
+    'Текст_отчета_2021_Том_1.docx'
 ]
 
 CONTENT_DOCX_M = [

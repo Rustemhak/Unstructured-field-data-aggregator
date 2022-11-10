@@ -20,7 +20,7 @@ from sentenizer.segment_sentences import segment_to_sent
 from testing_constant import CONTENT_G1, CONTENT_G2, CONTENT_B1, CONTENT_B2, REPORTS_FOR_THE_TEST, \
     PATHS_FOR_REPORTS_PDF, CONTENT_A1, CONTENT_A2
 from xml_making.tag_making import set_xml_tag_sentences, set_tag_attr, set_tag_attr_for_field, \
-    set_tag_attr_object_charact, set_tag_attr_kin
+    set_tag_attr_object_charact, set_tag_attr_kin_kvit
 from yargy_utils import TOKENIZER
 
 
@@ -114,7 +114,8 @@ def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: i
     set_tag_attr_object_charact(chapter, 'oil_sat')
     set_tag_attr_object_charact(chapter, 'porosity')
 
-    set_tag_attr_kin(chapter)
+    set_tag_attr_kin_kvit(chapter, 'kin')
+    set_tag_attr_kin_kvit(chapter, 'kvit')
 
     tree = ET.ElementTree(report)
     indent(report)
@@ -208,6 +209,8 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
     list_of_columns_object = []
     list_of_columns_kin_object = []
     list_of_columns_kin_value = []
+    list_of_columns_kvit_object = []
+    list_of_columns_kvit_value = []
 
     for column in list(report_pd.columns):
         if 'object_oil_deposit' in column:
@@ -216,26 +219,43 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
             list_of_columns_kin_object.append(column)
         if 'kin_value' in column:
             list_of_columns_kin_value.append(column)
+        if 'object_name_kvit' in column:
+            list_of_columns_kvit_object.append(column)
+        if 'kvit_value' in column:
+            list_of_columns_kvit_value.append(column)
 
     objects_oil_deposit = [list(report_pd[column].dropna().items()) for column in list_of_columns_object]
     objects_kin = []
     kin_values = []
-    for column_object, column_value in zip(list_of_columns_kin_object, list_of_columns_kin_value):
-        objects_kin.append(*(report_pd[column_object].dropna()))
-        kin_values.append(*(report_pd[column_value].dropna()))
+    objects_kvit = []
+    kvit_values = []
+    for charact in [
+        (list_of_columns_kin_object, list_of_columns_kin_value, objects_kin, kin_values),
+        (list_of_columns_kvit_object, list_of_columns_kvit_value, objects_kvit, kvit_values)
+    ]:
+        for column_object, column_value in zip(*charact[:2]):
+            charact[2].append(*(report_pd[column_object].dropna()))
+            charact[3].append(*(report_pd[column_value].dropna()))
 
-    for idx, object_name in enumerate(objects_kin):
-        upd_name = object_name.replace(' горизонт', '').replace(' ярус', '')
-        if '+' in upd_name:
-            idx_beg = upd_name.find('+')
-            upd_name = upd_name[:idx_beg - 2] + 'о-' + upd_name[idx_beg + 1:]
-        objects_kin[idx] = upd_name
+    for charact_objects in [objects_kin, objects_kvit]:
+        for idx, object_name in enumerate(charact_objects):
+            upd_name = object_name.replace(' горизонт', '').replace(' ярус', '')
+            if '+' in upd_name:
+                idx_beg = upd_name.find('+')
+                upd_name = upd_name[:idx_beg - 2] + 'о-' + upd_name[idx_beg + 1:]
+            charact_objects[idx] = upd_name
 
     kin_values_for_object = {}
-    if objects_kin and kin_values:
-        for object_name, kin_value in zip(objects_kin, kin_values):
-            if object_name not in kin_values_for_object:
-                kin_values_for_object[object_name] = kin_value
+    kvit_values_for_object = {}
+
+    for charact_dict, charact_objects, charact_values in [
+        (kin_values_for_object, objects_kin, kin_values),
+        (kvit_values_for_object, objects_kvit, kvit_values)
+    ]:
+        if charact_objects and charact_values:
+            for object_name, charact_value in zip(charact_objects, charact_values):
+                if object_name not in charact_dict:
+                    charact_dict[object_name] = charact_value
 
     objects_with_kern = get_objects_with_kern(field_name)
     if objects_with_kern:
@@ -305,13 +325,19 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
             else:
                 kin = ''
 
-            objects_oil_deposit.append((object_name, int(object_count), with_kern, *object_characts, kin))
+            if object_name in kvit_values_for_object:
+                kvit = kvit_values_for_object[object_name]
+            else:
+                kvit = ''
+
+            objects_oil_deposit.append((object_name, int(object_count), with_kern, *object_characts, kin, kvit))
         if open_date and exploit_date and location:
             report_dict = {'Месторождение': [field], 'Год открытия': [open_date],
                            'Год начала эксплуатации': [exploit_date], 'Местоположение': [location],
                            'объекты': [objects_oil_deposit[0][0]], 'количество залежей': [objects_oil_deposit[0][1]],
                            'керн': [objects_oil_deposit[0][2]], 'нефтенасыщенность': [objects_oil_deposit[0][3]],
-                           'пористость': [objects_oil_deposit[0][4]], 'КИН': [objects_oil_deposit[0][5]]}
+                           'пористость': [objects_oil_deposit[0][4]], 'КИН': [objects_oil_deposit[0][5]],
+                           'Квыт': [objects_oil_deposit[0][6]]}
             report_df = pd.DataFrame(data=report_dict)
 
             for object_info in objects_oil_deposit[1:]:
@@ -323,7 +349,8 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
                         'керн': [object_info[2]],
                         'нефтенасыщенность': [object_info[3]],
                         'пористость': [object_info[4]],
-                        'КИН': [object_info[5]]
+                        'КИН': [object_info[5]],
+                        'Квыт': [object_info[6]]
                     })
                 ))
 
@@ -331,8 +358,8 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
 
 
 if __name__ == '__main__':
-    path_to_test = join('..', 'reports', 'xml', 'test_kin_a')
-    paths = [join(path_to_test, f'chapter{i}.xml') for i in [11.1, 11.2]]
+    path_to_test = join('..', 'reports', 'xml', 'archangelsk')
+    paths = [join(path_to_test, f'chapter{i}.xml') for i in CONTENT_A1+CONTENT_A2]
     report_xml_to_xlsx(paths, 'archangelsk')
 
     # for chapter in REPORTS_FOR_THE_TEST['content_a2']:

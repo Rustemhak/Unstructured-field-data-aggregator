@@ -3,6 +3,7 @@ from yargy import Parser
 
 from models.characteristics import *
 from rules.kin_rule import get_KIN
+from rules.kvit_rule import get_kvit
 from rules.objects_rule import HORIZON, STAGE
 from rules.oil_sat_rule import get_oil_sat
 from rules.porosity_rule import get_porosity
@@ -147,16 +148,28 @@ def set_tag_attr_object_charact(chapter: ET.SubElement, tag_name: str) -> None:
             # sentence.set('object', object_name)
 
 
-def set_tag_attr_kin(chapter: ET.SubElement) -> None:
+def set_tag_attr_kin_kvit(chapter: ET.SubElement, charact_name: str) -> None:
     """
-    Устанавливает атрибут кин
+    Устанавливает атрибут кин или квыт
 
     :param chapter: глава из XML-файла
+    :param charact_name: имя характеристики: kin или kvit
     """
+    if charact_name == 'kin':
+        charact_fun = get_KIN
+    elif charact_name == 'kvit':
+        charact_fun = get_kvit
+    else:
+        raise AttributeError(f"Attribute tag_name expected 'kin' or 'kvit', but got {charact_name}")
+
     for sentence in chapter:
         text = sentence.text
-        list_of_kin = get_KIN(text)
-        if list_of_kin:
-            for idx, match in enumerate(list_of_kin):
-                sentence.set(f'object_name_kin_{idx}', match.fact.object_name_kin)
-                sentence.set(f'kin_value_{idx}', match.fact.kin_value)
+        list_of_charact = charact_fun(text)
+        if list_of_charact:
+            for idx, match in enumerate(list_of_charact):
+                if charact_name == 'kin':
+                    sentence.set(f'object_name_kin_{idx}', match.fact.object_name_kin)
+                    sentence.set(f'kin_value_{idx}', match.fact.kin_value)
+                else:
+                    sentence.set(f'object_name_kvit_{idx}', match.fact.object_name_kvit)
+                    sentence.set(f'kvit_value_{idx}', match.fact.kvit_value)
