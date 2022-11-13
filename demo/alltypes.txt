@@ -1,0 +1,83 @@
+﻿pullenti.unitext.CorrectDocumentParam: Параметры корректировки (оптимизации) представления в параметрах создания CreateDocumentParam.CorrextParams.
+pullenti.unitext.CreateDocumentParam: Параметры создания документа UnitextDocument функцией CreateDocument
+pullenti.unitext.FileFormat: Формат файла
+pullenti.unitext.FileFormatClass: Класс формата
+pullenti.unitext.GetHtmlParam: Параметры генерации HTML функциями GetHtml и GetHtmlString
+pullenti.unitext.GetHtmlParamFootnoteOutType: Тип вывода сносок при генерации HTML
+pullenti.unitext.GetPlaintextParam: Параметры генерации плоского текста функциями GetPlaintext и GetPlaintextString
+pullenti.unitext.internal.html.EmlPart
+pullenti.unitext.internal.html.HtmlCorrector
+pullenti.unitext.internal.html.HtmlNode
+pullenti.unitext.internal.html.HtmlParser
+pullenti.unitext.internal.html.MhtHelper: Поддержка формата MHT и EML
+pullenti.unitext.internal.html.MhtPart
+pullenti.unitext.internal.misc.BorderInfo
+pullenti.unitext.internal.misc.CsvHelper
+pullenti.unitext.internal.misc.ExcelHelper
+pullenti.unitext.internal.misc.PngWrapper
+pullenti.unitext.internal.pdf.PdfArray
+pullenti.unitext.internal.pdf.PdfBoolValue
+pullenti.unitext.internal.pdf.PdfDictionary
+pullenti.unitext.internal.pdf.PdfFig
+pullenti.unitext.internal.pdf.PdfFile
+pullenti.unitext.internal.pdf.PdfFont
+pullenti.unitext.internal.pdf.PdfImage
+pullenti.unitext.internal.pdf.PdfIntValue
+pullenti.unitext.internal.pdf.PdfName
+pullenti.unitext.internal.pdf.PdfNull
+pullenti.unitext.internal.pdf.PdfObject
+pullenti.unitext.internal.pdf.PdfPage
+pullenti.unitext.internal.pdf.PdfRealValue
+pullenti.unitext.internal.pdf.PdfRect
+pullenti.unitext.internal.pdf.PdfStringValue
+pullenti.unitext.internal.pdf.PdfText
+pullenti.unitext.internal.uni.IUnitextGenNumStyle
+pullenti.unitext.internal.uni.UnitextGen
+pullenti.unitext.internal.uni.UniTextGenNumLevel
+pullenti.unitext.internal.uni.UnitextGenNumStyle
+pullenti.unitext.internal.uni.UnitextGenNumStyleEx
+pullenti.unitext.internal.uni.UniTextGenNumType
+pullenti.unitext.IUnitextExtension
+pullenti.unitext.UnilayOcrQuality
+pullenti.unitext.UnilayPage: Страница тексто-графического слоя
+pullenti.unitext.UnilayRectangle: Прямоугольник тексто-графического слоя
+pullenti.unitext.UnitextComment: Примечание (аннотация). Оформляется двумя такими объектами -  для начальной позиции и конечной позиции.
+pullenti.unitext.UnitextContainer: Контейнер других элементов
+pullenti.unitext.UnitextContainerType: Тип контейнера элементов
+pullenti.unitext.UnitextDocblock: Cтруктурирующий блок из заголовочной части, тела, окончания и приложений.  Выделяется только для некоторых форматов, если задать LoadDocumentStructure = true в параметрах создания.  Но этот элемент активно используется на других этапах анализа, когда структура документа восстанавливается  по плоскому тексту, а затем их иерархия оформляется этими элементами. Например, для нормативных актов  это главы, статьи, части, пункты и подпункты.
+pullenti.unitext.UnitextDocblockType: Тип структурирующего блока
+pullenti.unitext.UnitextDocument: Unitext - документ
+pullenti.unitext.UnitextExcelSourceInfo: Дополнительная информация при выделении из MsExcel
+pullenti.unitext.UnitextFootnote: Сноска
+pullenti.unitext.UnitextHyperlink: Гиперссылка
+pullenti.unitext.UnitextImage: Картинка
+pullenti.unitext.UnitextItem: Базовый класс для всех элементов Unitext:  UnitextPlaintext, UnitextContainer, UnitextTable, UnitextTablecell, UnitextList, UnitextListitem,  UnitextNewline, UnitextPagebreak, UnitextFootnote, UnitextImage, UnitextHyperlink, UnitextComment,  UnitextDocblock и UnitextMisc.
+pullenti.unitext.UnitextList: Список
+pullenti.unitext.UnitextListitem: Элемент списка
+pullenti.unitext.UnitextMisc: Разные нетекстовые элементы
+pullenti.unitext.UnitextMiscType: Тип нетекстового элемента
+pullenti.unitext.UnitextNewline: Переход на новую строку
+pullenti.unitext.UnitextPagebreak: Разрыв страниц
+pullenti.unitext.UnitextPagesection: Информация о страницах и колонтитулах.
+pullenti.unitext.UnitextPagesectionItem: Элемент сегмента страниц
+pullenti.unitext.UnitextPagesectionItemPages: Страницы, на которые распространяется элемент сегмента
+pullenti.unitext.UnitextPlaintext: Фрагмент плоского текста.
+pullenti.unitext.UnitextPlaintextType: Тип плоского текста
+pullenti.unitext.UnitextService: Сервис поддержки технологии Unitext
+pullenti.unitext.UnitextStyle: Представление стилей. Реализовано пока только для формата DOCX.
+pullenti.unitext.UnitextStyledFragment: Фрагмент, с которым связаны стили UnitextStyle (если их выделение реализовано для входного формата).  Представляет собой иерархию.
+pullenti.unitext.UnitextStyledFragmentType: Типы стилевых фрагментов UnitextStyledFragment
+pullenti.unitext.UnitextTable: Таблица, представляет собой матрицу из клеток.  Ячейки могут заполнять прямоугольные области из клеток.  Ячейки не могут пересекаться друг с другом.
+pullenti.unitext.UnitextTablecell: Ячейка таблицы
+pullenti.util.ArchiveHelper: Работа с архивами и сжатием
+pullenti.util.DbfTable
+pullenti.util.EncodingStandard: Подерживаемые стандартные кодировки для EncodingWrapper. Введены, чтобы избежать зависимости от  платформы и языка программирования.
+pullenti.util.EncodingWrapper: Реализация кодировщика строк, замена системного Encoding.  Введена из-за того, что в .NET Core не поддержаны разные 1251 и пр.  Да и для кросспрограммности и кроссплатформенности это необходимо.
+pullenti.util.FileFormatsHelper: Хелпер работы с форматами файлов
+pullenti.util.FileInArchive: Файл в архиве, см. ArchiveHelper.GetFilesFromArchive
+pullenti.util.IXmlReadWriteSupport: Объекты, реализующие данный интерфейс, сериализуются одинаково на всех  языках программирования. См. MiscHelper.SerializeToBin и MiscHelper.DeserializeFromBin.
+pullenti.util.MiscHelper: Набор полезных функций
+pullenti.util.SizeunitConverter: Преобразователь единиц измерения размеров (Html, Css).  Поддерживаются: pt, cm, mm, in, px
+pullenti.util.StructExpressBlock
+pullenti.util.StructExpressLine
+pullenti.util.TextHelper
