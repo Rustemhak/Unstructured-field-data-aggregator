@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/main.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <title>{% block title %} {% endblock %}</title>
+</head>
+<body>
+<header class="d-flex justify-content-center py-3">
+    <ul class="nav nav-pills">
+        <li class="nav-item"><a href="/" class="nav-link">Домашняя страница</a></li>
+        <li class="nav-item"><a href="/upload" class="nav-link">Загрузка</a></li>
+        <li class="nav-item"><a href="/files" class="nav-link">Файлы</a></li>
+        <li class="nav-item"><a href="/about" class="nav-link">О проекте</a></li>
+        <li class="nav-item"><a href="/delete-all" class="nav-link">Удалить файлы</a></li>
+        <li class="nav-item"><a href="/result" class="nav-link">Результат</a></li>
+
+    </ul>
+</header>
+{% block body %} {% endblock %}
+</body>
+</html>

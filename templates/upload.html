@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Страница загрузки файлов
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <form id="upload-container" method="POST" action="{{ url_for('upload') }}" enctype="multipart/form-data">
+                <input id="file" type="file" name="file" multiple>
+                <label for="file">Выберите файл</label>
+                <input type="submit" value="Загрузить">
+        </form>
+    </div>
+{% endblock %}
