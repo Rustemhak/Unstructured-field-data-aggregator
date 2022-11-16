@@ -260,6 +260,11 @@ DOCX_PATHS_A = [
     'Текст_отчета_2021_Том_1.docx'
 ]
 
+DOCX_CHAPTERS_PATHS = {
+    'matrosovskoe': DOCX_PATHS_M,
+    'archangelsk_d': DOCX_PATHS_A
+}
+
 CONTENT_DOCX_M = [
     (2, 3, 0, join(path_to_docx_m, 'инф. справка, введение, заключение.docx')),
     (1, 3, 1, join(path_to_docx_m, 'Гл. 1,2-геология.doc')),
