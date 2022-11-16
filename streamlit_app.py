@@ -9,12 +9,13 @@ from read_report.read_report import read_report
 
 def extract_data(feed):
     data = []
-    with pdfplumber.load(feed) as pdf:
+    with pdfplumber.open(feed) as pdf:
         if len(pdf.pages):
             text = ' '.join([
                 page.dedupe_chars().extract_text(y_tolerance=6) or '' for page in pdf.pages if page
             ])
-            #pdf to xlsx
+    return None
+            # pdf to xlsx
 
 
 uploaded_file = st.file_uploader("Choose a file")
