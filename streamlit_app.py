@@ -5,6 +5,7 @@ from io import StringIO
 import pdfplumber
 
 from read_report.read_report import read_report
+from get_result.main import get_result
 
 
 def extract_data(feed):
@@ -14,6 +15,7 @@ def extract_data(feed):
             text = ' '.join([
                 page.dedupe_chars().extract_text(y_tolerance=6) or '' for page in pdf.pages if page
             ])
+
     return None
             # pdf to xlsx
 

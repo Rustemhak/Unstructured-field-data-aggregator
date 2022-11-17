@@ -6,6 +6,7 @@ from os.path import isdir, join
 
 from yargy import Parser
 import pandas as pd
+import streamlit as st
 
 from converting.convert_pdf_txt import read_txt
 from preprocessing_text import replace_short_name, STAND_GEO_SHORT_NAMES
@@ -177,7 +178,8 @@ def get_charact_info_from_str(string: str) -> tuple:
     return charact_value, charact_num_def
 
 
-def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lambda x: True):
+@st.cache
+def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lambda x: True, on_csv=False):
     """
     Перевод отчета из xml в xlsx.
 
@@ -360,6 +362,9 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
                 ))
 
             report_df.to_excel(f"..//reports//xlsx//{field_name}.xlsx")
+            if on_csv:
+                return report_df.to_csv(sep='\t').encode('utf-8')
+    return None
 
 
 if __name__ == '__main__':

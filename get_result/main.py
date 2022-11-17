@@ -1,5 +1,6 @@
 from os import listdir, rmdir
 from os.path import join, isdir
+import streamlit as st
 
 from testing.pipeline_for_testing import convert_chapter_pdf_to_xml, report_xml_to_xlsx
 from testing.testing import save_objects_with_kern
@@ -25,7 +26,7 @@ def get_result(report):
     path_to_xml_chapters = join('..', 'reports', 'xml', 'workdir')
     list_of_paths_to_xml = [join(path_to_xml_chapters, path_to_chapter) for path_to_chapter in
                             listdir(path_to_xml_chapters)]
-    report_xml_to_xlsx(list_of_paths_to_xml, 'workdir')
+    result = report_xml_to_xlsx(list_of_paths_to_xml, 'workdir', on_csv=True)
 
     if isdir(path_to_xml_chapters):
         rmdir(path_to_xml_chapters)
@@ -33,4 +34,6 @@ def get_result(report):
     if isdir(path_to_kern):
         rmdir(path_to_kern)
 
-    return join('..', 'reports', 'xlsx', 'workdir.xlsx')
+    if result is not None:
+        return result
+    return None
