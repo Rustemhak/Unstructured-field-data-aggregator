@@ -115,20 +115,24 @@ def save_objects_with_kern(path_name: str, content_name: str or tuple[int], fiel
     """
     Сохранить в json файл и вернуть список объектов с керном
 
-    :param path_name: Имя пути к отчету (Example: 'path_a1')
+    :param path_name: Имя пути к отчету (Example: 'path_a1') или путь к отчету.
     :param content_name: Имя содержания отчета (Example: 'content_a1') для поиска таблицы по керну по всему отчету.
         Если передан итерируемый объект со страницами начала и конца диапазона, то поиск ведется только в нем.
     :param field_name: Имя месторождения (Example: 'archangelsk')
     :return: Список объектов с керном, или пустой список, если таблица по керну не найдена
     """
     kern_dataframe = pd.DataFrame()
-    path = PATHS_FOR_REPORTS_PDF[path_name]
+    path = PATHS_FOR_REPORTS_PDF.get(path_name)
+    if not path:
+        path = path_name
 
     if isinstance(content_name, tuple):
         kern_dataframe = pd.concat((kern_dataframe, recognize_to_read_table(path, content_name[0], content_name[1])))
         # kern_dataframe = kern_dataframe.append(recognize_to_read_table(path, content_name[0], content_name[1]))
     else:
-        content = REPORTS_FOR_THE_TEST[content_name]
+        content = REPORTS_FOR_THE_TEST.get(content_name)
+        if not content:
+            content = content_name
         for chapter in content:
             kern_dataframe = pd.concat((kern_dataframe, recognize_to_read_table(path, chapter[0], chapter[1])))
             # kern_dataframe = kern_dataframe.append(recognize_to_read_table(path, chapter[0], chapter[1]))

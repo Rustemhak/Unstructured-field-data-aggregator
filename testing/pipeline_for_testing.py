@@ -21,7 +21,7 @@ from testing_constant import CONTENT_G1, CONTENT_G2, CONTENT_B1, CONTENT_B2, REP
     PATHS_FOR_REPORTS_PDF, CONTENT_A1, CONTENT_A2
 from xml_making.tag_making import set_xml_tag_sentences, set_tag_attr, set_tag_attr_for_field, \
     set_tag_attr_object_charact, set_tag_attr_kin_kvit
-from yargy_utils import TOKENIZER
+from yargy_utils import TOKENIZER, number_extractor
 
 
 def indent(elem, level=0):
@@ -77,10 +77,13 @@ def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: i
 
     if path_txt is None:
         text = read_pdf(path_pdf, idx_beg_chap, idx_end_chap)
+        if text:
+            return False
+        text = replace_short_name(text, STAND_GEO_SHORT_NAMES)
+        text = number_extractor.replace_groups(text)
     else:
         text = read_txt(path_txt)
 
-    # text = extractor.replace_groups(text)
     # создание тега "отчёт"
     report = ET.Element('report')
     # создание тега "главы"
@@ -127,6 +130,8 @@ def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: i
         if not isdir(path_to_xml_dir):
             mkdir(path_to_xml_dir)
         tree.write(f"{path_to_xml_dir}//chapter{chap_id}.xml", encoding="utf-8", xml_declaration=True)
+        return True
+    return False
 
 
 def get_objects_with_kern(field_name):
