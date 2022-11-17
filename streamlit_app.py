@@ -5,7 +5,7 @@ from io import StringIO
 import pdfplumber
 
 from read_report.read_report import read_report
-from get_result.main import get_result
+# from get_result.main import get_result
 
 
 def extract_data(feed):
