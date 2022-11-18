@@ -19,6 +19,6 @@ def pdf_to_txt(path: str, idx_beg: int, idx_end: int, chapter_id: int, txt_dir_n
 
 
 def read_txt(path) -> str:
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, "r", encoding="windows-1251") as f:
         text = f.read()
     return text

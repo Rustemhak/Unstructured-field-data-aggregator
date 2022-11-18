@@ -18,7 +18,7 @@ from rules.kin_rule import get_KIN
 from rules.location_rule import LOC
 from rules.oil_deposit_rule import set_tag_attr_oil_deposit
 from sentenizer.segment_sentences import segment_to_sent
-from testing_constant import CONTENT_G1, CONTENT_G2, CONTENT_B1, CONTENT_B2, REPORTS_FOR_THE_TEST, \
+from .testing_constant import CONTENT_G1, CONTENT_G2, CONTENT_B1, CONTENT_B2, REPORTS_FOR_THE_TEST, \
     PATHS_FOR_REPORTS_PDF, CONTENT_A1, CONTENT_A2
 from xml_making.tag_making import set_xml_tag_sentences, set_tag_attr, set_tag_attr_for_field, \
     set_tag_attr_object_charact, set_tag_attr_kin_kvit
@@ -62,7 +62,8 @@ def get_modifed(string: str, language: str):
     return None
 
 
-def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: int, chap_id: int, path_xml,
+def convert_chapter_pdf_to_xml(path_pdf: str = None, idx_beg_chap: int = None, idx_end_chap: int = None,
+                               chap_id: int = 1, path_xml: str = None,
                                path_txt: str = None):
     """
     Пайплайн для конвертации главы отчёта в формате pdf в XML
@@ -127,7 +128,7 @@ def convert_chapter_pdf_to_xml(path_pdf: str, idx_beg_chap: int, idx_end_chap: i
         # writing xml
         # print(report.items())
         # ET.dump(report)
-        path_to_xml_dir = f"..//reports//xml//{path_xml}"
+        path_to_xml_dir = f".//reports//xml//{path_xml}"
         if not isdir(path_to_xml_dir):
             mkdir(path_to_xml_dir)
         tree.write(f"{path_to_xml_dir}//chapter{chap_id}.xml", encoding="utf-8", xml_declaration=True)
@@ -186,8 +187,10 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
     :param list_paths_chapters: список путей к главам отчета в формате xml
     :param field_name: имя месторождения
     :param in_field: функция для проверки имен объектов на их наличие в месторождении
+    :param on_csv
     """
     report_pd = pd.DataFrame()
+    print('list_paths_chapters', list_paths_chapters)
     for chapter_path in list_paths_chapters:
         chapter_pd = chapter_xml_to_pd(chapter_path)
         report_pd = pd.concat((report_pd, chapter_pd))
@@ -300,6 +303,7 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
 
     if not objects_oil_deposit:
         print('Object_oil_deposit не нашлись(')
+
     else:
         object_oil_deposit_raw = [i[0][1] for i in objects_oil_deposit]
         objects_oil_deposit = []
@@ -363,13 +367,22 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
 
             report_df.to_excel(f"..//reports//xlsx//{field_name}.xlsx")
             if on_csv:
+                print('report_df', report_df)
                 return report_df.to_csv(sep='\t').encode('utf-8')
+    if open_date and exploit_date and location:
+        report_dict = {'Месторождение': [field], 'Год открытия': [open_date],
+                       'Год начала эксплуатации': [exploit_date], 'Местоположение': [location]}
+        report_df = pd.DataFrame(data=report_dict)
+        report_df.to_excel(f".//reports//xlsx//{field_name}.xlsx")
+        if on_csv:
+            print('report_df', report_df)
+            return report_df.to_csv(sep='\t').encode('windows-1251')
     return None
 
 
 if __name__ == '__main__':
     path_to_test = join('..', 'reports', 'xml', 'archangelsk')
-    paths = [join(path_to_test, f'chapter{i}.xml') for i in CONTENT_A1+CONTENT_A2]
+    paths = [join(path_to_test, f'chapter{i}.xml') for i in CONTENT_A1 + CONTENT_A2]
     report_xml_to_xlsx(paths, 'archangelsk')
 
     # for chapter in REPORTS_FOR_THE_TEST['content_a2']:

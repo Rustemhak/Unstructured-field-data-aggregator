@@ -6,12 +6,12 @@ import pandas as pd
 from yargy import Parser, rule
 
 from converting.convert_pdf_txt import pdf_to_txt, read_txt
-from pipeline_for_testing import convert_chapter_pdf_to_xml, report_xml_to_xlsx, get_objects_with_kern
+from .pipeline_for_testing import convert_chapter_pdf_to_xml, report_xml_to_xlsx, get_objects_with_kern
 from preprocessing_text import replace_short_name, STAND_GEO_SHORT_NAMES
 from read_report.read_report import read_report
 from read_tables.kern_table import recognize_to_read_table
-from in_field_functions import in_archangel_field
-from testing_constant import *
+# from in_field_functions import in_archangel_field
+from .testing_constant import *
 from yargy_utils import number_extractor, ADJF
 
 
@@ -111,7 +111,7 @@ def get_modifed(string: str, language: str):
     return None
 
 
-def save_objects_with_kern(path_name: str, content_name: str or tuple[int], field_name) -> [str]:
+def save_objects_with_kern(path_name, content_name: str or tuple[int], field_name) -> [str]:
     """
     Сохранить в json файл и вернуть список объектов с керном
 
@@ -122,7 +122,7 @@ def save_objects_with_kern(path_name: str, content_name: str or tuple[int], fiel
     :return: Список объектов с керном, или пустой список, если таблица по керну не найдена
     """
     kern_dataframe = pd.DataFrame()
-    path = PATHS_FOR_REPORTS_PDF.get(path_name)
+    path = PATHS_FOR_REPORTS_PDF.get(path_name.name)
     if not path:
         path = path_name
 
@@ -130,6 +130,7 @@ def save_objects_with_kern(path_name: str, content_name: str or tuple[int], fiel
         kern_dataframe = pd.concat((kern_dataframe, recognize_to_read_table(path, content_name[0], content_name[1])))
         # kern_dataframe = kern_dataframe.append(recognize_to_read_table(path, content_name[0], content_name[1]))
     else:
+        print(content_name)
         content = REPORTS_FOR_THE_TEST.get(content_name)
         if not content:
             content = content_name
