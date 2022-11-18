@@ -8,7 +8,7 @@ from yargy import Parser, rule
 from converting.convert_pdf_txt import pdf_to_txt, read_txt
 from .pipeline_for_testing import convert_chapter_pdf_to_xml, report_xml_to_xlsx, get_objects_with_kern
 from preprocessing_text import replace_short_name, STAND_GEO_SHORT_NAMES
-from read_report.read_report import read_report
+# from read_report.read_report import read_report
 from read_tables.kern_table import recognize_to_read_table
 # from in_field_functions import in_archangel_field
 from .testing_constant import *
@@ -40,7 +40,8 @@ def converting_docx_to_txt(field_name: str, chapter_paths, content) -> None:
     for chapter_id, path in zip(content, docx_paths):
         print(f"{chapter_id} из {len(docx_paths) - 1}")
         with open(join(path_to_txt, f'{chapter_id}raw.txt'), 'w', encoding='utf-8') as txt_file:
-            txt_file.write(read_report(path))
+            #txt_file.write(read_report(path))
+            pass
 
 
 def replacing_words(path_name: str, content: []) -> str:
