@@ -4,7 +4,6 @@ from download_streamlit import convert_df
 from io import StringIO
 import pdfplumber
 
-from get_result.main import get_result
 # from read_report.read_report import read_report
 from testing.pipeline_for_testing import convert_chapter_pdf_to_xml, report_xml_to_xlsx
 

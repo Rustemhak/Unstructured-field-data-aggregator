@@ -79,7 +79,8 @@ def convert_chapter_pdf_to_xml(path_pdf: str = None, idx_beg_chap: int = None, i
 
     if path_txt is None:
         text = read_pdf(path_pdf, idx_beg_chap, idx_end_chap)
-        if text:
+        if not text:
+            print(f"Текст на страницах {idx_beg_chap} - {idx_end_chap} не найден.")
             return False
         text = replace_short_name(text, STAND_GEO_SHORT_NAMES)
         text = number_extractor.replace_groups(text)
@@ -95,8 +96,6 @@ def convert_chapter_pdf_to_xml(path_pdf: str = None, idx_beg_chap: int = None, i
     chapter.set('ID', str(chap_id))
     # chapter.text = text
 
-    if not path_txt:
-        text = replace_short_name(text, STAND_GEO_SHORT_NAMES)
     sentences = segment_to_sent(text)
 
     set_xml_tag_sentences(sentences, chapter)
@@ -128,7 +127,7 @@ def convert_chapter_pdf_to_xml(path_pdf: str = None, idx_beg_chap: int = None, i
         # writing xml
         # print(report.items())
         # ET.dump(report)
-        path_to_xml_dir = f".//reports//xml//{path_xml}"
+        path_to_xml_dir = f"..//reports//xml//{path_xml}"
         if not isdir(path_to_xml_dir):
             mkdir(path_to_xml_dir)
         tree.write(f"{path_to_xml_dir}//chapter{chap_id}.xml", encoding="utf-8", xml_declaration=True)
@@ -234,7 +233,10 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
         if 'kvit_value' in column:
             list_of_columns_kvit_value.append(column)
 
-    objects_oil_deposit = [list(report_pd[column].dropna().items()) for column in list_of_columns_object]
+    objects_oil_deposit = []
+    if list_of_columns_object:
+        objects_oil_deposit = [list(report_pd[column].dropna().items()) for column in list_of_columns_object]
+
     objects_kin = []
     kin_values = []
     objects_kvit = []
@@ -243,11 +245,18 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
         (list_of_columns_kin_object, list_of_columns_kin_value, objects_kin, kin_values),
         (list_of_columns_kvit_object, list_of_columns_kvit_value, objects_kvit, kvit_values)
     ]:
+
+        if not (charact[0] and charact[1]):
+            continue
+
         for column_object, column_value in zip(*charact[:2]):
             charact[2].append(*(report_pd[column_object].dropna()))
             charact[3].append(*(report_pd[column_value].dropna()))
 
     for charact_objects in [objects_kin, objects_kvit]:
+        if not charact_objects:
+            continue
+
         for idx, object_name in enumerate(charact_objects):
             upd_name = object_name.replace(' горизонт', '').replace(' ярус', '')
             if '+' in upd_name:
@@ -262,10 +271,13 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
         (kin_values_for_object, objects_kin, kin_values),
         (kvit_values_for_object, objects_kvit, kvit_values)
     ]:
-        if charact_objects and charact_values:
-            for object_name, charact_value in zip(charact_objects, charact_values):
-                if object_name not in charact_dict:
-                    charact_dict[object_name] = charact_value
+
+        if not (charact_objects and charact_values):
+            continue
+
+        for object_name, charact_value in zip(charact_objects, charact_values):
+            if object_name not in charact_dict:
+                charact_dict[object_name] = charact_value
 
     objects_with_kern = get_objects_with_kern(field_name)
     if objects_with_kern:
@@ -369,21 +381,40 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
             if on_csv:
                 print('report_df', report_df)
                 return report_df.to_csv(sep='\t').encode('utf-8')
-    if open_date and exploit_date and location:
-        report_dict = {'Месторождение': [field], 'Год открытия': [open_date],
-                       'Год начала эксплуатации': [exploit_date], 'Местоположение': [location]}
+
+    if field or open_date or exploit_date or location:
+        report_dict = {}
+
+        for attr, label in [
+            (field, 'Месторождение'),
+            (open_date, 'Год открытия'),
+            (exploit_date, 'Год начала эксплуатации'),
+            (location, 'Местоположение')
+        ]:
+            if attr:
+                report_dict[label] = [attr]
+
         report_df = pd.DataFrame(data=report_dict)
-        report_df.to_excel(f".//reports//xlsx//{field_name}.xlsx")
+        report_df.to_excel(f"..//reports//xlsx//{field_name}.xlsx")
         if on_csv:
             print('report_df', report_df)
             return report_df.to_csv(sep='\t').encode('windows-1251')
+
+    print('Данные об месторождении не найдены')
     return None
 
 
 if __name__ == '__main__':
-    path_to_test = join('..', 'reports', 'xml', 'archangelsk')
-    paths = [join(path_to_test, f'chapter{i}.xml') for i in CONTENT_A1 + CONTENT_A2]
-    report_xml_to_xlsx(paths, 'archangelsk')
+    convert_chapter_pdf_to_xml('../reports/pdfs/Архангельское_месторождение_Пересчет_запасов_КГ.pdf', 1, 50, 0,
+                               'tester')
+
+    # path_to_test = join('..', 'reports', 'xml', 'archangelsk')
+    # paths = [join(path_to_test, f'chapter{i}.xml') for i in CONTENT_A1 + CONTENT_A2]
+    # report_xml_to_xlsx(paths, 'archangelsk')
+
+    # convert_chapter_pdf_to_xml('', 0, 0, 2.3,
+    #                            join('..', 'reports', 'xml', 'archangelsk_d'),
+    #                            path_txt=join('..', 'reports', 'txt', 'archangelsk_d', 'upd', '2.3upd.txt'))
 
     # for chapter in REPORTS_FOR_THE_TEST['content_a2']:
     #     convert_chapter_pdf_to_xml(PATHS_FOR_REPORTS_PDF['path_a2'], *chapter,

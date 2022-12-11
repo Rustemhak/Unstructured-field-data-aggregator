@@ -64,7 +64,7 @@ def create_dict_strat_obj(obj_pd: pd.DataFrame, name_object: str) -> tuple:
     return objects_set, object_names
 
 
-path_xlsx = "./reports/xlsx/Layers_codes.xlsx"
+path_xlsx = "../reports/xlsx/Layers_codes.xlsx"
 df_code_layers = pd.read_excel(path_xlsx)
 df_copy1 = preproccess_df_code_layers(path_xlsx)
 df_copy2 = preproccess_df_code_layers(path_xlsx)

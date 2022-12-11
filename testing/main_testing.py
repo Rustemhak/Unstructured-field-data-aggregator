@@ -6,12 +6,12 @@ import pandas as pd
 from yargy import Parser, rule
 
 from converting.convert_pdf_txt import pdf_to_txt, read_txt
-from .pipeline_for_testing import convert_chapter_pdf_to_xml, report_xml_to_xlsx, get_objects_with_kern
+from testing.pipeline_for_testing import convert_chapter_pdf_to_xml, report_xml_to_xlsx, get_objects_with_kern
 from preprocessing_text import replace_short_name, STAND_GEO_SHORT_NAMES
 # from read_report.read_report import read_report
 from read_tables.kern_table import recognize_to_read_table
 # from in_field_functions import in_archangel_field
-from .testing_constant import *
+from testing.testing_constant import *
 from yargy_utils import number_extractor, ADJF
 
 
@@ -123,7 +123,7 @@ def save_objects_with_kern(path_name, content_name: str or tuple[int], field_nam
     :return: Список объектов с керном, или пустой список, если таблица по керну не найдена
     """
     kern_dataframe = pd.DataFrame()
-    path = PATHS_FOR_REPORTS_PDF.get(path_name.name)
+    path = PATHS_FOR_REPORTS_PDF.get(path_name)
     if not path:
         path = path_name
 
@@ -132,18 +132,27 @@ def save_objects_with_kern(path_name, content_name: str or tuple[int], field_nam
         # kern_dataframe = kern_dataframe.append(recognize_to_read_table(path, content_name[0], content_name[1]))
     else:
         print(content_name)
-        content = REPORTS_FOR_THE_TEST.get(content_name)
-        if not content:
+        if isinstance(content_name, list) and isinstance(content_name[0], tuple):
             content = content_name
+        elif isinstance(content_name, str):
+            content = REPORTS_FOR_THE_TEST.get(content_name)
+        else:
+            return []
         for chapter in content:
             kern_dataframe = pd.concat((kern_dataframe, recognize_to_read_table(path, chapter[0], chapter[1])))
             # kern_dataframe = kern_dataframe.append(recognize_to_read_table(path, chapter[0], chapter[1]))
 
-    list_of_columns = kern_dataframe.columns
+    list_of_columns = list(kern_dataframe.columns)
+    print(list_of_columns)
     if list_of_columns:
         list_of_codes_objects = list(kern_dataframe[list_of_columns[0]])
+        print(list_of_codes_objects)
 
         for i in range(len(list_of_codes_objects)):
+
+            if not isinstance(list_of_codes_objects[i], str):
+                return []
+
             list_of_codes_objects[i] = get_modifed(list_of_codes_objects[i], 'en')
 
         object_code_dataframe = pd.read_excel(join('..', 'reports', 'xlsx', 'Layers_codes.xlsx'), usecols='M,N')
@@ -245,6 +254,8 @@ def testing(path_name: str or [str], content_name: str or [str], field_name: str
 
 
 if __name__ == '__main__':
+    get_modifed('3.1 3.2 3.3 3.4 3.5 4.1 4.2 4.3 5.1. 5.2. 5.3. 5.4 5.5 5.6 5.7 5.8 5.9 5.10 5.11 5.12 5.13 5.14 5.15 5.16 5.17 5.18 6.1 6.2 6.3', 'en')
+
     # converting_docx_to_txt('matrosovskoe', DOCX_PATHS_M)
     # converting_txt_to_xml(
     #     'content_m',
@@ -285,14 +296,13 @@ if __name__ == '__main__':
     #     path_to_upd_txt=join('..', 'reports', 'txt', 'archangelsk', 'upd')
     # )
     #
-    testing(
-        'path_a1_d',
-        'content_a1_d',
-        'archangelsk_d',
-        CONTENT_A1_D,
-        kern=False,
-        path_to_upd_txt=join('..', 'reports', 'txt', 'archangelsk_d', 'upd')
-    )
+    # testing(
+    #     'path_a1_d',
+    #     'content_a1_d',
+    #     'archangelsk_d',
+    #     CONTENT_A1_D,
+    #     kern=False
+    # )
 
     # testing(
     #     'path_a2',

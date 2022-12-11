@@ -23,11 +23,14 @@ def recognize_to_read_table(path: str, idx_beg: int, idx_end: int, clean: bool =
     text = ''
     parser = Parser(KERN, tokenizer=TOKENIZER)
     with pdfplumber.open(path) as pdf:
-        if len(pdf.pages):
+        pages_len = len(pdf.pages)
+        if pages_len:
             # text = ' '.join([
             #     page.dedupe_chars().extract_text(y_tolerance=6) or '' for page in pdf.pages[idx_beg:idx_end] if page
             # ])
             for i in range(idx_beg, idx_end):
+                if pages_len <= idx_end:
+                    break
                 page = pdf.pages[i]
                 if page:
                     text = page.dedupe_chars().extract_text(y_tolerance=6)
