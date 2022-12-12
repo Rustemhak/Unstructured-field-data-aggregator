@@ -131,7 +131,6 @@ def save_objects_with_kern(path_name, content_name: str or tuple[int], field_nam
         kern_dataframe = pd.concat((kern_dataframe, recognize_to_read_table(path, content_name[0], content_name[1])))
         # kern_dataframe = kern_dataframe.append(recognize_to_read_table(path, content_name[0], content_name[1]))
     else:
-        print(content_name)
         if isinstance(content_name, list) and isinstance(content_name[0], tuple):
             content = content_name
         elif isinstance(content_name, str):
@@ -143,10 +142,8 @@ def save_objects_with_kern(path_name, content_name: str or tuple[int], field_nam
             # kern_dataframe = kern_dataframe.append(recognize_to_read_table(path, chapter[0], chapter[1]))
 
     list_of_columns = list(kern_dataframe.columns)
-    print(list_of_columns)
     if list_of_columns:
         list_of_codes_objects = list(kern_dataframe[list_of_columns[0]])
-        print(list_of_codes_objects)
 
         for i in range(len(list_of_codes_objects)):
 

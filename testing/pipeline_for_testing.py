@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 from os import mkdir, path as pth
 from os.path import isdir, join
 
+import textract
 from yargy import Parser
 import pandas as pd
 import streamlit as st
@@ -63,8 +64,7 @@ def get_modifed(string: str, language: str):
 
 
 def convert_chapter_pdf_to_xml(path_pdf: str = None, idx_beg_chap: int = None, idx_end_chap: int = None,
-                               chap_id: int = 1, path_xml: str = None,
-                               path_txt: str = None):
+                               chap_id: int = 1, path_xml: str = None, path_txt: str = None, path_docx=None):
     """
     Пайплайн для конвертации главы отчёта в формате pdf в XML
     Результат в 'output.xml'
@@ -75,17 +75,26 @@ def convert_chapter_pdf_to_xml(path_pdf: str = None, idx_beg_chap: int = None, i
     :param chap_id: номер главы
     :param path_xml: путь для сохранения xml в папке reports/xml
     :param path_txt: путь к документу в формате txt, если документ был конвертирован из pdf в txt
+    :param path_docx: путь к документу в формате docx.
     """
 
-    if path_txt is None:
+    if path_pdf:
         text = read_pdf(path_pdf, idx_beg_chap, idx_end_chap)
         if not text:
             print(f"Текст на страницах {idx_beg_chap} - {idx_end_chap} не найден.")
             return False
-        text = replace_short_name(text, STAND_GEO_SHORT_NAMES)
-        text = number_extractor.replace_groups(text)
-    else:
+
+    elif path_txt:
         text = read_txt(path_txt)
+
+    elif path_docx:
+        text = textract.process(path_docx, language='rus+eng').decode('utf-8')
+
+    else:
+        raise AttributeError(f"Expected path_pdf or path_txt or path_docx but got nothing")
+
+    text = replace_short_name(text, STAND_GEO_SHORT_NAMES)
+    text = number_extractor.replace_groups(text)
 
     # создание тега "отчёт"
     report = ET.Element('report')
@@ -127,10 +136,20 @@ def convert_chapter_pdf_to_xml(path_pdf: str = None, idx_beg_chap: int = None, i
         # writing xml
         # print(report.items())
         # ET.dump(report)
-        path_to_xml_dir = f"..//reports//xml//{path_xml}"
+
+        if isdir(temp_path := join('..', 'reports', 'xml')):
+            path_beg = temp_path
+        elif isdir(temp_path := join('reports', 'xml')):
+            path_beg = temp_path
+        else:
+            raise FileNotFoundError(
+                r"No such file or directory: '..\reports\xml' or 'reports\xml'"
+            )
+
+        path_to_xml_dir = join(path_beg, path_xml)
         if not isdir(path_to_xml_dir):
             mkdir(path_to_xml_dir)
-        tree.write(f"{path_to_xml_dir}//chapter{chap_id}.xml", encoding="utf-8", xml_declaration=True)
+        tree.write(join(path_to_xml_dir, f'chapter{chap_id}.xml'), encoding="utf-8", xml_declaration=True)
         return True
     return False
 
@@ -313,6 +332,15 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
             else:
                 charact_dict[object_name] = (charact_value, charact_num_def)
 
+    if isdir(temp_path := join('..', 'reports', 'xlsx')):
+        path_to_xlsx_folder = temp_path
+    elif isdir(temp_path := join('reports', 'xlsx')):
+        path_to_xlsx_folder = temp_path
+    else:
+        raise FileNotFoundError(r"No such file or directory: '..\reports\xlsx' or 'reports\xlsx'")
+
+    print(objects_oil_deposit)
+
     if not objects_oil_deposit:
         print('Object_oil_deposit не нашлись(')
 
@@ -377,10 +405,13 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
                     })
                 ))
 
-            report_df.to_excel(f"..//reports//xlsx//{field_name}.xlsx")
+            report_df.to_excel(join(path_to_xlsx_folder, f'{field_name}.xlsx'))
+
             if on_csv:
                 print('report_df', report_df)
                 return report_df.to_csv(sep='\t').encode('utf-8')
+
+            return None
 
     if field or open_date or exploit_date or location:
         report_dict = {}
@@ -395,10 +426,12 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
                 report_dict[label] = [attr]
 
         report_df = pd.DataFrame(data=report_dict)
-        report_df.to_excel(f"..//reports//xlsx//{field_name}.xlsx")
+        report_df.to_excel(join(path_to_xlsx_folder, f'{field_name}.xlsx'))
         if on_csv:
             print('report_df', report_df)
             return report_df.to_csv(sep='\t').encode('windows-1251')
+
+        return None
 
     print('Данные об месторождении не найдены')
     return None

@@ -1,3 +1,4 @@
+import os.path
 import re
 
 import numpy as np
@@ -64,7 +65,15 @@ def create_dict_strat_obj(obj_pd: pd.DataFrame, name_object: str) -> tuple:
     return objects_set, object_names
 
 
-path_xlsx = "../reports/xlsx/Layers_codes.xlsx"
+if os.path.exists("../reports/xlsx/Layers_codes.xlsx"):
+    path_xlsx = "../reports/xlsx/Layers_codes.xlsx"
+elif os.path.exists("reports/xlsx/Layers_codes.xlsx"):
+    path_xlsx = "reports/xlsx/Layers_codes.xlsx"
+else:
+    raise FileNotFoundError(
+        "No such file or directory: '../reports/xlsx/Layers_codes.xlsx' or 'reports/xlsx/Layers_codes.xlsx'"
+    )
+
 df_code_layers = pd.read_excel(path_xlsx)
 df_copy1 = preproccess_df_code_layers(path_xlsx)
 df_copy2 = preproccess_df_code_layers(path_xlsx)
