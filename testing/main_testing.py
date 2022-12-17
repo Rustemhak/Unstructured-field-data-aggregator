@@ -40,7 +40,7 @@ def converting_docx_to_txt(field_name: str, chapter_paths, content) -> None:
     for chapter_id, path in zip(content, docx_paths):
         print(f"{chapter_id} из {len(docx_paths) - 1}")
         with open(join(path_to_txt, f'{chapter_id}raw.txt'), 'w', encoding='utf-8') as txt_file:
-            #txt_file.write(read_report(path))
+            # txt_file.write(read_report(path))
             pass
 
 
@@ -185,11 +185,21 @@ def save_objects_with_kern(path_name, content_name: str or tuple[int], field_nam
                             list_of_objects.append(obj.lower())
 
         if list_of_objects:
-            if not isdir(f'../reports/objects_with_kern/{field_name}'):
-                mkdir(f'../reports/objects_with_kern/{field_name}')
+
+            if isdir(temp_path := join('..', 'reports', 'objects_with_kern')):
+                path_beg = temp_path
+            elif isdir(temp_path := join('reports', 'objects_with_kern')):
+                path_beg = temp_path
+            else:
+                raise FileNotFoundError(
+                    r"No such file or directory: '..\reports\objects_with_kern' or 'reports\objects_with_kern'"
+                )
+
+            if not isdir(temp_path := join(path_beg, field_name)):
+                mkdir(temp_path)
 
             with open(
-                    f'../reports/objects_with_kern/{field_name}/{path_name.split("_")[1]}.json',
+                    join(temp_path, f"{path_name.split('_')[1]}.json"),
                     'w', encoding='utf-8'
             ) as file:
                 json.dump(list_of_objects, file, ensure_ascii=False)
@@ -251,8 +261,6 @@ def testing(path_name: str or [str], content_name: str or [str], field_name: str
 
 
 if __name__ == '__main__':
-    get_modifed('3.1 3.2 3.3 3.4 3.5 4.1 4.2 4.3 5.1. 5.2. 5.3. 5.4 5.5 5.6 5.7 5.8 5.9 5.10 5.11 5.12 5.13 5.14 5.15 5.16 5.17 5.18 6.1 6.2 6.3', 'en')
-
     # converting_docx_to_txt('matrosovskoe', DOCX_PATHS_M)
     # converting_txt_to_xml(
     #     'content_m',
@@ -273,7 +281,7 @@ if __name__ == '__main__':
     # replacing_words('path_a2', CONTENT_A2)
 
     # converting_xml_to_xlsx('archangelsk', CONTENT_A1 + CONTENT_A2)
-
+    #
     # testing(
     #     'path_m',
     #     'content_m',
@@ -283,15 +291,14 @@ if __name__ == '__main__':
     #     is_pdf=False
     # )
 
-    # testing(
-    #     ['path_a1', 'path_a2'],
-    #     ['content_a1', 'content_a2'],
-    #     'archangelsk',
-    #     CONTENT_A1 + CONTENT_A2,
-    #     in_field=in_archangel_field,
-    #     kern=False,
-    #     path_to_upd_txt=join('..', 'reports', 'txt', 'archangelsk', 'upd')
-    # )
+    testing(
+        ['path_a1', 'path_a2'],
+        ['content_a1', 'content_a2'],
+        'archangelsk',
+        CONTENT_A1 + CONTENT_A2,
+        kern=False,
+        path_to_upd_txt=join('..', 'reports', 'txt', 'archangelsk', 'upd')
+    )
     #
     # testing(
     #     'path_a1_d',
@@ -311,44 +318,44 @@ if __name__ == '__main__':
     #     path_to_upd_txt=join('..', 'reports', 'txt', 'archangelsk', 'upd')
     # )
 
-    # testing(
-    #     'path_i1',
-    #     'content_i1',
-    #     'ivinskoe',
-    #     CONTENT_I,
-    #     kern=False,
-    #     path_to_upd_txt=join('..', 'reports', 'txt', 'ivinskoe', 'upd')
-    # )
-    # testing(
-    #     'path_sh1',
-    #     'content_sh1',
-    #     'sherbenskoe',
-    #     CONTENT_SH,
-    #     kern=False,
-    #     path_to_upd_txt=join('..', 'reports', 'txt', 'sherbenskoe', 'upd')
-    # )
+    testing(
+        'path_i1',
+        'content_i1',
+        'ivinskoe',
+        CONTENT_I,
+        kern=False,
+        path_to_upd_txt=join('..', 'reports', 'txt', 'ivinskoe', 'upd')
+    )
+    testing(
+        'path_sh1',
+        'content_sh1',
+        'sherbenskoe',
+        CONTENT_SH,
+        kern=False,
+        path_to_upd_txt=join('..', 'reports', 'txt', 'sherbenskoe', 'upd')
+    )
     # converting_xml_to_xlsx('sherbenskoe', CONTENT_SH)
-    # testing(
-    #     ['path_b1', 'path_b2'],
-    #     ['content_b1', 'content_b2'],
-    #     'baydankinskoe',
-    #     CONTENT_B1 + CONTENT_B2,
-    #     kern=False,
-    #     path_to_upd_txt=join('..', 'reports', 'txt', 'baydankinskoe', 'upd')
-    # )
-    # testing(
-    #     'path_ac',
-    #     'content_ac1',
-    #     'acanskoe',
-    #     CONTENT_AC,
-    #     kern=False,
-    #     path_to_upd_txt=join('..', 'reports', 'txt', 'acanskoe', 'upd')
-    # )
-    # testing(
-    #     ['path_g1', 'path_g2'],
-    #     ['content_g1', 'content_g2'],
-    #     'granichnoe',
-    #     CONTENT_G1,
-    #     kern=False,
-    #     path_to_upd_txt=join('..', 'reports', 'txt', 'granichnoe', 'upd')
-    # )
+    testing(
+        ['path_b1', 'path_b2'],
+        ['content_b1', 'content_b2'],
+        'baydankinskoe',
+        CONTENT_B1 + CONTENT_B2,
+        kern=False,
+        path_to_upd_txt=join('..', 'reports', 'txt', 'baydankinskoe', 'upd')
+    )
+    testing(
+        'path_ac',
+        'content_ac1',
+        'acanskoe',
+        CONTENT_AC,
+        kern=False,
+        path_to_upd_txt=join('..', 'reports', 'txt', 'acanskoe', 'upd')
+    )
+    testing(
+        ['path_g1', 'path_g2'],
+        ['content_g1', 'content_g2'],
+        'granichnoe',
+        CONTENT_G1,
+        kern=False,
+        path_to_upd_txt=join('..', 'reports', 'txt', 'granichnoe', 'upd')
+    )

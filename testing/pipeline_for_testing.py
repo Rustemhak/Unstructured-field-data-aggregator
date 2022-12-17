@@ -339,7 +339,6 @@ def report_xml_to_xlsx(list_paths_chapters: [str], field_name: str, in_field=lam
     else:
         raise FileNotFoundError(r"No such file or directory: '..\reports\xlsx' or 'reports\xlsx'")
 
-    print(objects_oil_deposit)
 
     if not objects_oil_deposit:
         print('Object_oil_deposit не нашлись(')

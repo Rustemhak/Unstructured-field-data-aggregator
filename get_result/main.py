@@ -14,7 +14,7 @@ def random_string_generator(str_size):
     return ''.join(choice(ascii_letters) for _ in range(str_size))
 
 
-def get_result(report, doc_type='pdf', on_csv=False, is_one_report=True, workdir_name=None):
+def get_result(report, doc_type='pdf', on_csv=False, is_one_report=True, workdir_name=None, additional_chap_id=None):
     """
     Пайплайн для обработки отчета из pdf документа в результирующую xlsx таблицу
 
@@ -25,6 +25,7 @@ def get_result(report, doc_type='pdf', on_csv=False, is_one_report=True, workdir
     в противном случае False.
     :param workdir_name: Название папки, в которой будут сохранены промежуточные файлы.
     После окончания работы она будет удалена.
+    :param additional_chap_id: дополнительное число для индексов xml глав для избегания коллизий.
     :return: файл результирующей таблицы (xlsx).
     """
     workdir = f"workdir_{random_string_generator(15)}"
@@ -32,12 +33,12 @@ def get_result(report, doc_type='pdf', on_csv=False, is_one_report=True, workdir
         workdir = workdir_name
 
     if isinstance(report, list) or isinstance(report, tuple):
-        for rep in report:
+        for i, rep in enumerate(report):
             if is_one_report:
                 work_folder = workdir
             else:
                 work_folder = None
-            get_result(rep, doc_type, on_csv, workdir_name=work_folder)
+            get_result(rep, doc_type, on_csv, workdir_name=work_folder, additional_chap_id=i)
 
     if not is_one_report:
         return None
@@ -49,7 +50,8 @@ def get_result(report, doc_type='pdf', on_csv=False, is_one_report=True, workdir
             print('Обработка pdf файла...')
             while active:
                 print(f"Обработка страниц {idx_chap * 50 + 1} - {(idx_chap + 1) * 50}")
-                active = convert_chapter_pdf_to_xml(report, idx_chap * 50 + 1, (idx_chap + 1) * 50, idx_chap, workdir)
+                idx = float(str(idx_chap) + '.' + str(additional_chap_id))
+                active = convert_chapter_pdf_to_xml(report, idx_chap * 50 + 1, (idx_chap + 1) * 50, idx, workdir)
                 idx_chap += 1
 
             print("Поиск данных о керне...")
@@ -94,9 +96,6 @@ def get_result(report, doc_type='pdf', on_csv=False, is_one_report=True, workdir
 
 if __name__ == '__main__':
     t1 = time.time()
-    # report_path = sys.argv[1]
-    # report_type = sys.argv[2]
-    # one_report = bool(sys.argv[3])
     answer = bool(input('enter 1 if you want to pass a list of paths\n'
                         'enter 0 if you want to pass one path \n'))
     if answer:
@@ -104,10 +103,10 @@ if __name__ == '__main__':
     else:
         report_path = input('path to report: ')
     report_type = input('type of report document (pdf or docx): ')
-    one_report = bool(input('enter 1 if all files belong to the same report\n'
-                            'enter 0 if all files belong to different reports\n'))
+    one_report = bool(int(input('enter 1 if all files belong to the same report\n'
+                                'enter 0 if all files belong to different reports\n')))
     get_result(report_path, report_type, is_one_report=one_report)
-    print(f'Executed time = {time.time() - t1}')
+    print(f'Executed time = {round(time.time() - t1, 2)} s')
 
     # t1 = time.time()
     # get_result('../reports/docx/archangelsk_d/Текст_отчета_2021_Том_1.docx', doc_type='docx')
