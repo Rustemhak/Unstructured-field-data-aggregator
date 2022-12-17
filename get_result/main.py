@@ -14,7 +14,8 @@ def random_string_generator(str_size):
     return ''.join(choice(ascii_letters) for _ in range(str_size))
 
 
-def get_result(report, doc_type='pdf', on_csv=False, is_one_report=True, workdir_name=None, additional_chap_id=None):
+def get_result(report, doc_type='pdf', on_csv=False, is_one_report=True, workdir_name=None, additional_chap_id=None,
+               progress_bar=None):
     """
     Пайплайн для обработки отчета из pdf документа в результирующую xlsx таблицу
 
@@ -26,7 +27,8 @@ def get_result(report, doc_type='pdf', on_csv=False, is_one_report=True, workdir
     :param workdir_name: Название папки, в которой будут сохранены промежуточные файлы.
     После окончания работы она будет удалена.
     :param additional_chap_id: дополнительное число для индексов xml глав для избегания коллизий.
-    :return: файл результирующей таблицы (xlsx).
+    :param progress_bar: progress bar для pyqt приложения.
+    :return: файл результирующей таблицы (xlsx) (если on_csv == True) и путь до этой таблицы.
     """
     workdir = f"workdir_{random_string_generator(15)}"
     if workdir_name:
@@ -53,14 +55,20 @@ def get_result(report, doc_type='pdf', on_csv=False, is_one_report=True, workdir
                 idx = float(str(idx_chap) + '.' + str(additional_chap_id))
                 active = convert_chapter_pdf_to_xml(report, idx_chap * 50 + 1, (idx_chap + 1) * 50, idx, workdir)
                 idx_chap += 1
+            if progress_bar:
+                progress_bar.setProperty("value", 40)
 
             print("Поиск данных о керне...")
             content_for_kern = [(i * 50 + 1, (i + 1) * 50) for i in range(idx_chap)]
             save_objects_with_kern(report, content_for_kern, workdir)
+            if progress_bar:
+                progress_bar.setProperty("value", 80)
 
         elif doc_type in ['doc', 'docx']:
             print('Обработка doc(x) файла...')
             convert_chapter_pdf_to_xml(path_docx=report, path_xml=workdir)
+            if progress_bar:
+                progress_bar.setProperty("value", 70)
 
         else:
             raise AttributeError(f"For doc_type expected 'pdf', 'doc' or 'docx' value but got {doc_type}")
@@ -79,6 +87,8 @@ def get_result(report, doc_type='pdf', on_csv=False, is_one_report=True, workdir
                             listdir(path_to_xml_chapters)]
     print("Заполнение таблицы результатами...")
     result = report_xml_to_xlsx(list_of_paths_to_xml, workdir, on_csv=on_csv)
+    if progress_bar:
+        progress_bar.setProperty("value", 98)
 
     if isdir(path_to_xml_chapters):
         rmtree(path_to_xml_chapters)
@@ -88,10 +98,14 @@ def get_result(report, doc_type='pdf', on_csv=False, is_one_report=True, workdir
     elif isdir(path_to_kern := join('reports', 'objects_with_kern', workdir)):
         rmtree(path_to_kern)
 
+    result_path = join('reports', 'xlsx', workdir)
+
+    if progress_bar:
+        progress_bar.setProperty("value", 100)
     print('\n-----\nDone\n-----')
     if result is not None:
-        return result
-    return None
+        return result, result_path
+    return result_path
 
 
 if __name__ == '__main__':
