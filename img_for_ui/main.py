@@ -15,12 +15,20 @@ class MainWindowUi(QMainWindow, Ui_MainWindow):
         self.pushButton_2.clicked.connect(self.algorithm)
         self.list_of_file_paths = []
         self.result_path = ''
+
         self.algo_thread = QThread(self)
         self.algo = Algorithm(get_result, report=self.list_of_file_paths, progress_bar=self.progressBar)
         self.algo.moveToThread(self.algo_thread)
-        self.algo_thread.started.connect(self.algo.run)
+
+        # self.algo_thread.started.connect(self.algo.run)
         # self.algo_thread.finished.connect(self.processing_of_results)
         self.algo.path_to_result.connect(self.processing_of_results)
+        self.data_received.connect(self.algo.run)
+
+        self.algo_thread.start()
+
+    data_received = pyqtSignal()
+
 
     def get_file_path(self):
         print('Button pressed')
@@ -48,7 +56,8 @@ class MainWindowUi(QMainWindow, Ui_MainWindow):
             print("Algorithm was starting")
 
             self.algo.set_attr(report=self.list_of_file_paths, progress_bar=self.progressBar)
-            self.algo_thread.start()
+            self.data_received.emit()
+            # self.algo_thread.start()
             self.progressBar.setValue(3)
 
     def processing_of_results(self, path):
@@ -65,20 +74,6 @@ class MainWindowUi(QMainWindow, Ui_MainWindow):
         return path
 
 
-# class Algorithm(QThread):
-#     def __init__(self, target, slot_on_finished=None, **kwargs):
-#         super(Algorithm, self).__init__(parent=None)
-#         self.target = target
-#         self.kwargs = kwargs
-#         self.is_r
-#         if slot_on_finished:
-#             self.finished.connect(slot_on_finished)
-#
-#     def run(self, *args, **kwargs):
-#         print('qthread was run')
-#         self.target(**self.kwargs)
-
-
 class Algorithm(QObject):
     def __init__(self, function, *args, **kwargs):
         super(Algorithm, self).__init__()
@@ -92,7 +87,7 @@ class Algorithm(QObject):
     def run(self):
         print('algo was starting')
         self.path_to_result.emit(self.function(*self.args, **self.kwargs))
-        QThread.currentThread().quit()
+        # QThread.currentThread().quit()
 
     def set_attr(self, *args, **kwargs):
         self.args = args
