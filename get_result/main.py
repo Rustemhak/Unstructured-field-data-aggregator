@@ -35,12 +35,13 @@ def get_result(report, doc_type='pdf', on_csv=False, is_one_report=True, workdir
         workdir = workdir_name
 
     if isinstance(report, list) or isinstance(report, tuple):
-        for i, rep in enumerate(report):
-            if is_one_report:
-                work_folder = workdir
-            else:
-                work_folder = None
-            get_result(rep, doc_type, on_csv, workdir_name=work_folder, additional_chap_id=i)
+        if len(report) > 1:
+            for i, rep in enumerate(report):
+                if is_one_report:
+                    work_folder = workdir
+                else:
+                    work_folder = None
+                get_result(rep, doc_type, on_csv, workdir_name=work_folder, additional_chap_id=i)
 
     if not is_one_report:
         return None

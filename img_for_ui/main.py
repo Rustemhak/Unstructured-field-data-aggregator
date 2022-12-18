@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtCore import QSize, Qt, QThread, QObject, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QMainWindow, QApplication, QStackedWidget, QFileDialog, QScrollArea, QWidget, QVBoxLayout
 from threading import Thread
 
@@ -12,14 +12,20 @@ class MainWindowUi(QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self.pushButton.clicked.connect(self.get_file_path)
-        self.pushButton_2.clicked.connect(self.start)
+        self.pushButton_2.clicked.connect(self.algorithm)
         self.list_of_file_paths = []
         self.result_path = ''
+        self.algo_thread = QThread(self)
+        self.algo = Algorithm(get_result, report=self.list_of_file_paths, progress_bar=self.progressBar)
+        self.algo.moveToThread(self.algo_thread)
+        self.algo_thread.started.connect(self.algo.run)
+        # self.algo_thread.finished.connect(self.processing_of_results)
+        self.algo.path_to_result.connect(self.processing_of_results)
 
     def get_file_path(self):
         print('Button pressed')
         file_name = QFileDialog.getOpenFileName()
-        print(file_name)
+        print(file_name[0])
 
         self.list_of_file_paths.append(file_name[0])
         _translate = QtCore.QCoreApplication.translate
@@ -37,26 +43,62 @@ class MainWindowUi(QMainWindow, Ui_MainWindow):
 
         self.textBrowser.setHtml(_translate("MainWindow", text_browser))
 
-    def start(self):
+    def algorithm(self):
         if self.list_of_file_paths:
             print("Algorithm was starting")
-            # thread = Thread(target=get_result,
-            #                 args=(self.list_of_file_paths, 'pdf', False, True, None, None, self.progressBar))
-            # thread.start()
-            # self.result_path = thread.join()
-            self.result_path = get_result(report=self.list_of_file_paths, progress_bar=self.progressBar)
-            self.list_of_file_paths = []
 
-            _translate = QtCore.QCoreApplication.translate
-            text_browser = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n" \
-                           "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n" \
-                           "p, li { white-space: pre-wrap; }\n" \
-                           "</style></head>" \
-                           "<body style=\" font-family:\'MS Shell Dlg 2\'; font-size:7.8pt; font-weight:400; font-style:normal;\">\n" \
-                           "</body></html>"
-            self.textBrowser.setHtml(_translate("MainWindow", text_browser))
+            self.algo.set_attr(report=self.list_of_file_paths, progress_bar=self.progressBar)
+            self.algo_thread.start()
+            self.progressBar.setValue(3)
 
-            print(self.result_path)
+    def processing_of_results(self, path):
+        self.list_of_file_paths = []
+        _translate = QtCore.QCoreApplication.translate
+        text_browser = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n" \
+                       "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n" \
+                       "p, li { white-space: pre-wrap; }\n" \
+                       "</style></head>" \
+                       "<body style=\" font-family:\'MS Shell Dlg 2\'; font-size:7.8pt; font-weight:400; font-style:normal;\">\n" \
+                       "</body></html>"
+        self.textBrowser.setHtml(_translate("MainWindow", text_browser))
+        print(path)
+        return path
+
+
+# class Algorithm(QThread):
+#     def __init__(self, target, slot_on_finished=None, **kwargs):
+#         super(Algorithm, self).__init__(parent=None)
+#         self.target = target
+#         self.kwargs = kwargs
+#         self.is_r
+#         if slot_on_finished:
+#             self.finished.connect(slot_on_finished)
+#
+#     def run(self, *args, **kwargs):
+#         print('qthread was run')
+#         self.target(**self.kwargs)
+
+
+class Algorithm(QObject):
+    def __init__(self, function, *args, **kwargs):
+        super(Algorithm, self).__init__()
+
+        self.function = function
+        self.args = args
+        self.kwargs = kwargs
+
+    path_to_result = pyqtSignal(str)
+
+    def run(self):
+        print('algo was starting')
+        self.path_to_result.emit(self.function(*self.args, **self.kwargs))
+        QThread.currentThread().quit()
+
+    def set_attr(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+# отправить сигнал в мэйн поток
 
 
 if __name__ == '__main__':
