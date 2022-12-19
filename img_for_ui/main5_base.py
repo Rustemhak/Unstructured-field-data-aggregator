@@ -19,7 +19,7 @@ class Ui_MainWindow(object):
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton.setGeometry(QtCore.QRect(260, 480, 151, 31))
+        self.pushButton.setGeometry(QtCore.QRect(258, 491, 151, 31))
         self.pushButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.pushButton.setStyleSheet("font: 12pt \"MS Shell Dlg 2\";\n"
                                       "color: rgb(0, 132, 255);\n"
@@ -28,9 +28,9 @@ class Ui_MainWindow(object):
         self.pushButton.setObjectName("pushButton")
         self.label_3 = QtWidgets.QLabel(self.centralwidget)
         self.label_3.setGeometry(QtCore.QRect(0, -20, 901, 611))
-        self.label_3.setStyleSheet("background-image: url(Снимок экрана 2022-12-16 111001.png)")
+        self.label_3.setStyleSheet("background-image: url(final.png)")
         self.label_3.setText("")
-        self.label_3.setPixmap(QtGui.QPixmap("Снимок экрана 2022-12-16 111001.png"))
+        self.label_3.setPixmap(QtGui.QPixmap("final.png"))
         self.label_3.setScaledContents(True)
         self.label_3.setObjectName("label_3")
         self.textBrowser = QtWidgets.QTextBrowser(self.centralwidget)

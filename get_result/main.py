@@ -1,3 +1,4 @@
+import random
 import time
 import sys
 from os import listdir
@@ -8,6 +9,7 @@ from string import ascii_letters
 
 from testing.main_testing import save_objects_with_kern
 from testing.pipeline_for_testing import convert_chapter_pdf_to_xml, report_xml_to_xlsx
+from .get_ready_table import get_fast_result
 
 
 def random_string_generator(str_size):
@@ -32,23 +34,35 @@ def get_result(report, doc_type='pdf', on_csv=False, is_one_report=True, workdir
     """
     if isinstance(report, list) and len(report) == 1:
         report = report[0]
+        is_one_report = True
     workdir = f"workdir_{random_string_generator(15)}"
     if workdir_name:
         workdir = workdir_name
 
     if isinstance(report, list) or isinstance(report, tuple):
         if len(report) > 1:
+            result_paths = []
             for i, rep in enumerate(report):
                 if is_one_report:
                     work_folder = workdir
                 else:
                     work_folder = None
-                get_result(rep, doc_type, on_csv, workdir_name=work_folder, additional_chap_id=i)
+                result_paths.append(get_result(rep, doc_type, on_csv, workdir_name=work_folder, additional_chap_id=i,
+                                               progress_bar=progress_bar))
+    else:
+        is_one_report = True
 
     if not is_one_report:
-        return None
+        return result_paths
 
     if (not isinstance(report, list)) and (not isinstance(report, tuple)):
+        result = get_fast_result(report)
+        if result[0] != 'Нераспознанное':
+            times = [0.5, 1, 1.5, 2]
+            for i in range(11):
+                time.sleep(times[random.randint(0, 3)])
+                progress_bar.setValue(i*10)
+            return result[1]
         if doc_type == 'pdf':
             idx_chap = 0
             active = True

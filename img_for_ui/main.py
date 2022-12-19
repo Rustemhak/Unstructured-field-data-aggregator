@@ -1,14 +1,18 @@
-from PyQt5 import QtCore
-from PyQt5.QtCore import QSize, QThread, QObject, pyqtSignal
-from PyQt5.QtWidgets import QMainWindow, QApplication, QStackedWidget, QFileDialog, QScrollArea
+import sys
+from os.path import join
+
+from PyQt5.QtCore import QSize, QThread, QObject, pyqtSignal, QCoreApplication
+from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog
 
 from get_result.main import get_result
 from main5_base import Ui_MainWindow
+from table_view import App, Table
 
 
 class MainWindowUi(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
+        self.table = None
         self.setupUi(self)
         self.pushButton.clicked.connect(self.get_file_path)
         self.pushButton_2.clicked.connect(self.algorithm)
@@ -28,11 +32,14 @@ class MainWindowUi(QMainWindow, Ui_MainWindow):
 
     def get_file_path(self):
         print('Button pressed')
-        file_name = QFileDialog.getOpenFileName()
-        print(file_name[0])
 
-        self.list_of_file_paths.append(file_name[0])
-        _translate = QtCore.QCoreApplication.translate
+        file_name = QFileDialog.getOpenFileName()[0]
+
+        if file_name:
+            print(f"file path: {file_name}")
+            self.list_of_file_paths.append(file_name)
+
+        _translate = QCoreApplication.translate
         text_browser = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n" \
                        "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n" \
                        "p, li { white-space: pre-wrap; }\n" \
@@ -40,8 +47,9 @@ class MainWindowUi(QMainWindow, Ui_MainWindow):
                        "<body style=\" font-family:\'MS Shell Dlg 2\'; font-size:7.8pt; font-weight:400; font-style:normal;\">\n"
 
         if self.list_of_file_paths:
-            for file in self.list_of_file_paths:
-                text_browser += f"<p><span style=\" font-size:10pt;\">{file}</span></p>"
+            if self.list_of_file_paths[0]:
+                for file in self.list_of_file_paths:
+                    text_browser += f"<p><span style=\" font-size:10pt;\">{file.split('/')[-1]}</span></p>"
 
         text_browser += "</body></html>"
 
@@ -59,9 +67,12 @@ class MainWindowUi(QMainWindow, Ui_MainWindow):
             self.data_received.emit()
 
     def processing_of_results(self, path):
+        if len(path) == 1:
+            path = path[0]
+
         print(f'beg process... {path}')
-        self.list_of_file_paths = []
-        _translate = QtCore.QCoreApplication.translate
+
+        _translate = QCoreApplication.translate
         text_browser = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n" \
                        "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n" \
                        "p, li { white-space: pre-wrap; }\n" \
@@ -69,9 +80,47 @@ class MainWindowUi(QMainWindow, Ui_MainWindow):
                        "<body style=\" font-family:\'MS Shell Dlg 2\'; font-size:7.8pt; font-weight:400; font-style:normal;\">\n" \
                        "</body></html>"
         self.textBrowser.setHtml(_translate("MainWindow", text_browser))
-        print(path)
+
         self.pushButton_2.setEnabled(True)
         self.pushButton.setEnabled(True)
+
+        if isinstance(path, list):
+            # tabs = [
+            #     (Table(join('..', f'{report}.xlsx'), 'Sheet1'), file_name.split('/')[-1][:-4])
+            #     for report, file_name in zip(path, self.list_of_file_paths)
+            # ]
+
+            tabs = []
+            for report, file_name in zip(path, self.list_of_file_paths):
+                worksheet = report.split('/')[-1][:-5]
+                if report.split('.')[-1] != 'xlsx':
+                    report += '.xlsx'
+                    worksheet = 'Sheet1'
+                tab_name = file_name.split('/')[-1][:-4]
+                if worksheet != 'Sheet1':
+                    tab_name = worksheet
+                tabs.append((Table(join('..', report), worksheet), tab_name))
+
+            self.table = App(tabs)
+            print('table was created')
+
+            self.table.show()
+            print('table was showed')
+
+        else:
+            try:
+                worksheet = path.split('/')[-1][:-5]
+                if path.split('.')[-1] != 'xlsx':
+                    worksheet = 'Sheet1'
+                    path += '.xlsx'
+                self.table = Table(
+                    join('..', path),
+                    worksheet
+                )
+                self.table.show()
+            except Exception as ex:
+                print(ex)
+        self.list_of_file_paths = []
 
 
 class Algorithm(QObject):
@@ -83,13 +132,16 @@ class Algorithm(QObject):
         self.kwargs = kwargs
         self.progress_bar = progress_bar
 
-    path_to_result = pyqtSignal(str)
+    path_to_result = pyqtSignal(list)
 
     def run(self):
         print('algo was starting')
         self.kwargs['progress_bar'] = self.progress_bar
+        self.kwargs['is_one_report'] = False
         result = self.function(*self.args, **self.kwargs)
         print(f'algo return: {result}')
+        if not isinstance(result, list):
+            result = [result]
         self.path_to_result.emit(result)
 
     def set_attr(self, *args, **kwargs):
@@ -98,12 +150,18 @@ class Algorithm(QObject):
 
 
 if __name__ == '__main__':
-    app = QApplication([])
-    window = QStackedWidget()
+    # app = QApplication([])
+    # window = QStackedWidget()
+    # main_window = MainWindowUi()
+    # scrollbar = QScrollArea(widgetResizable=True)
+    # scrollbar.setWidget(main_window)
+    # window.setFixedSize(QSize(900, 810))
+    # window.addWidget(scrollbar)
+    # window.show()
+    # app.exec()
+
+    app = QApplication(sys.argv)
     main_window = MainWindowUi()
-    scrollbar = QScrollArea(widgetResizable=True)
-    scrollbar.setWidget(main_window)
-    window.setFixedSize(QSize(900, 810))
-    window.addWidget(scrollbar)
-    window.show()
-    app.exec()
+    main_window.setFixedSize(QSize(900, 810))
+    main_window.show()
+    sys.exit(app.exec())
