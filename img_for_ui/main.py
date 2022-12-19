@@ -92,6 +92,8 @@ class MainWindowUi(QMainWindow, Ui_MainWindow):
 
             tabs = []
             for report, file_name in zip(path, self.list_of_file_paths):
+                if not report:
+                    continue
                 worksheet = report.split('/')[-1][:-5]
                 if report.split('.')[-1] != 'xlsx':
                     report += '.xlsx'
@@ -101,23 +103,25 @@ class MainWindowUi(QMainWindow, Ui_MainWindow):
                     tab_name = worksheet
                 tabs.append((Table(join('..', report), worksheet), tab_name))
 
-            self.table = App(tabs)
-            print('table was created')
+            if tabs:
+                self.table = App(tabs)
+                print('table was created')
 
-            self.table.show()
-            print('table was showed')
+                self.table.show()
+                print('table was showed')
 
         else:
             try:
-                worksheet = path.split('/')[-1][:-5]
-                if path.split('.')[-1] != 'xlsx':
-                    worksheet = 'Sheet1'
-                    path += '.xlsx'
-                self.table = Table(
-                    join('..', path),
-                    worksheet
-                )
-                self.table.show()
+                if path:
+                    worksheet = path.split('/')[-1][:-5]
+                    if path.split('.')[-1] != 'xlsx':
+                        worksheet = 'Sheet1'
+                        path += '.xlsx'
+                    self.table = Table(
+                        join('..', path),
+                        worksheet
+                    )
+                    self.table.show()
             except Exception as ex:
                 print(ex)
         self.list_of_file_paths = []

@@ -118,7 +118,8 @@ def get_result(report, doc_type='pdf', on_csv=False, is_one_report=True, workdir
     elif isdir(path_to_kern := join('reports', 'objects_with_kern', workdir)):
         rmtree(path_to_kern)
 
-    result_path = join('reports', 'xlsx', workdir)
+    if not isdir(result_path := join('reports', 'xlsx', workdir)):
+        result_path = None
 
     if progress_bar:
         progress_bar.setValue(100)
