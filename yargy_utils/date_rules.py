@@ -38,5 +38,6 @@ YEAR = and_(
 DATE = or_(
     rule(DAY, MONTH_NAME, YEAR),
     rule(DAY, '.', MONTH, '.', YEAR, 'г', '.'),
+    rule(MONTH_NAME, YEAR),
     rule(YEAR, or_(rule('г', '.'), rule(normalized('год'))))
 ).named('DATE')
