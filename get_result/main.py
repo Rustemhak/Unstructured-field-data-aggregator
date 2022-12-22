@@ -2,7 +2,7 @@ import random
 import time
 import sys
 from os import listdir
-from os.path import join, isdir
+from os.path import join, isdir, isfile
 from random import choice
 from shutil import rmtree
 from string import ascii_letters
@@ -47,8 +47,14 @@ def get_result(report, doc_type='pdf', on_csv=False, is_one_report=True, workdir
                     work_folder = workdir
                 else:
                     work_folder = None
-                result_paths.append(get_result(rep, doc_type, on_csv, workdir_name=work_folder, additional_chap_id=i,
-                                               progress_bar=progress_bar))
+                result_paths.append(
+                    get_result(rep,
+                               doc_type,
+                               on_csv,
+                               workdir_name=work_folder,
+                               additional_chap_id=i,
+                               progress_bar=progress_bar)
+                )
     else:
         is_one_report = True
 
@@ -56,13 +62,13 @@ def get_result(report, doc_type='pdf', on_csv=False, is_one_report=True, workdir
         return result_paths
 
     if (not isinstance(report, list)) and (not isinstance(report, tuple)):
-        result = get_fast_result(report)
-        if result[0] != 'Нераспознанное':
-            times = [0.5, 1, 1.5, 2]
-            for i in range(11):
-                time.sleep(times[random.randint(0, 3)])
-                progress_bar.setValue(i*10)
-            return result[1]
+        # result = get_fast_result(report)
+        # if result[0] != 'Нераспознанное':
+        #     times = [0.5, 1, 1.5, 2]
+        #     for i in range(11):
+        #         time.sleep(times[random.randint(0, 3)])
+        #         progress_bar.setValue(i*10)
+        #     return result[1]
         if doc_type == 'pdf':
             idx_chap = 0
             active = True
@@ -118,7 +124,8 @@ def get_result(report, doc_type='pdf', on_csv=False, is_one_report=True, workdir
     elif isdir(path_to_kern := join('reports', 'objects_with_kern', workdir)):
         rmtree(path_to_kern)
 
-    if not isdir(result_path := join('reports', 'xlsx', workdir)):
+    result_path = join('reports', 'xlsx', workdir)
+    if not isfile(join('..', f'{result_path}.xlsx')):
         result_path = None
 
     if progress_bar:
