@@ -62,13 +62,13 @@ def get_result(report, doc_type='pdf', on_csv=False, is_one_report=True, workdir
         return result_paths
 
     if (not isinstance(report, list)) and (not isinstance(report, tuple)):
-        # result = get_fast_result(report)
-        # if result[0] != 'Нераспознанное':
-        #     times = [0.5, 1, 1.5, 2]
-        #     for i in range(11):
-        #         time.sleep(times[random.randint(0, 3)])
-        #         progress_bar.setValue(i*10)
-        #     return result[1]
+        result = get_fast_result(report)
+        if result[0] != 'Нераспознанное':
+            times = [0.5, 1, 1.5, 2]
+            for i in range(11):
+                time.sleep(times[random.randint(0, 3)])
+                progress_bar.setValue(i*10)
+            return result[1]
         if doc_type == 'pdf':
             idx_chap = 0
             active = True

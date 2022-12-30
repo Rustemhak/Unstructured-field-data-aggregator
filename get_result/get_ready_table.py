@@ -211,10 +211,13 @@ def get_fast_result(f):
         result_file = 'reports/result/Архангельское.xlsx'
     elif field_name in ['Аканское', 'Аканский']:
         field_name = 'Аканское'
-        result_file = 'reports/result/Аканское.xlsx'
+        result_file = 'reports/result/Аканское_введение.xlsx'
     elif field_name in ['Байданкинское', 'Байданкинский']:
         field_name = 'Байданкинское'
         result_file = 'reports/result/Байданкинское.xlsx'
+    elif field_name in ['Бухараевское', 'Бухараевский']:
+        field_name = 'Бухараевское'
+        result_file = 'reports/result/'
     elif field_name in ['Граничное', 'Граничный']:
         field_name = 'Граничное'
         result_file = 'reports/result/Граничное.xlsx'
@@ -222,8 +225,8 @@ def get_fast_result(f):
         field_name = 'Ивинское'
         result_file = 'reports/result/Ивинское.xlsx'
     elif field_name in ['Матросовское', 'Матросовский']:
-        field_name = 'Матросовское'
-        result_file = 'reports/result/Матросовское.xlsx'
+        field_name = 'Бухараевское'
+        result_file = 'reports/result/Бухараевское_Информационный_отчет_18.1_030822.xlsx'
     elif field_name in ['Щербеньское', 'Щербеньский']:
         field_name = 'Щербеньское'
         result_file = 'reports/result/Щербеньское.xlsx'
