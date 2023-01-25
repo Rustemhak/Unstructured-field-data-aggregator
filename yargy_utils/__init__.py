@@ -45,10 +45,12 @@ DOT = eq('.')
 # числительное
 NUMR = gram('NUMR')
 PERCENT = eq('%')
+NUMERO_SIGN = eq('№')
+SLASH = eq('/')
 DECIMAL = rule(INT,
                or_(COMMA, DOT),
                INT)
-
+COLON = eq(':')
 # токенайзер
 TOKENIZER = MorphTokenizer().remove_types(EOL)
 #IdTokenizer
