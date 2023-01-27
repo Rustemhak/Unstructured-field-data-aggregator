@@ -24,12 +24,12 @@ class Program:
         # Перебираем примеры файлов разных форматов из встроенных ресурсов.
         # Содержимое там примерно одинаковое, и результат будет примерно одинаковым.
         
-        res_names = Utils.getResourcesNames('demo.reports', '.doc;.docx;.mht;.odt;.pdf;.rtf;.xlsx;.htm;.xml;.txt')
+        res_names = Utils.getResourcesNames('demo.acts', '.doc;.docx;.mht;.odt;.pdf;.rtf;.xlsx;.htm;.xml;.txt;.PDF')
         for resnam in res_names: 
             print("Resource {0}: ".format(resnam), end="", flush=True)
             content = [ ]
             # получаем байтовый поток ресурса
-            with Utils.getResourceStream('demo.reports', resnam) as stream:
+            with Utils.getResourceStream('demo.acts', resnam) as stream:
                 content = Utils.newArrayOfBytes(stream.length, 0)
                 stream.read(content, 0, len(content))
             print("{0} bytes ... ".format(len(content)), end="", flush=True)

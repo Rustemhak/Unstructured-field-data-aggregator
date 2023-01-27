@@ -51,6 +51,8 @@ DECIMAL = rule(INT,
                or_(COMMA, DOT),
                INT)
 COLON = eq(':')
+# любой токен
+POST = gram('POST')
 # токенайзер
 TOKENIZER = MorphTokenizer().remove_types(EOL)
 #IdTokenizer

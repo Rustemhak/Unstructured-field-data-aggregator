@@ -43,25 +43,24 @@ def process_tales(path):
     pdf = pdfplumber.open(path)
     p0 = pdf.pages[0]
     table_settings = {
-        "vertical_strategy": "lines",
-        "horizontal_strategy": "text",
-        "snap_y_tolerance": 5,
-        "intersection_x_tolerance": 15,
+        # "layout" : True,
+        # "use_text_flow" :True
+        # "horizontal_ltr" : False
     }
     # tables = p0.extract_tables(table_settings)
-    tables = p0.extract_tables()
+    tables = p0.extract_tables(table_settings)
     table_indexes = [0, 4, 5]
 
     tables = [tables[ind] for ind in table_indexes]
     table0 = tables[0]
     table0 = list(map(lambda x: list(map(lambda y: clear_enter(y), x)), table0))
-    #print(table0)
+    # print(table0)
     features = table0[0]
     d_8_10 = OrderedDict.fromkeys([features[0], features[3], features[-1]])
     values = table0[2]
-    d_8_10['Вид работы'] = values[1]
-    d_8_10['Метод работы'] = values[4]
-    d_8_10['Причина ремонта'] = values[5]
+    d_8_10['Вид работы'] = [values[1]]
+    d_8_10['Метод работы'] = [values[4]]
+    d_8_10['Причина ремонта'] = [values[5]]
     for k, v in d_8_10.items():
         print(k, ':', v)
 
@@ -69,12 +68,15 @@ def process_tales(path):
     table2 = tables[2]
     table2 = list(map(lambda x: list(map(lambda y: clear_enter(y), x)), table2))
     df2 = pd.DataFrame(table2[1:], columns=table2[0])
-    #print(df2)
+    # print(df2)
     df2.to_excel('РАСХОД МАТЕРИАЛОВ, ИСПОЛЬЗУЕМЫХ ПРИ РЕМОНТЕ.xlsx')
 
     # ПЕРФОРАЦИЯ, ОТКЛЮЧЕНИЕ ПЛАСТОВ
     table1 = tables[1]
     table1 = list(map(lambda x: list(map(lambda y: clear_enter(y), x)), table1))
     df1 = pd.DataFrame(table1[1:], columns=table1[0])
-    #print(df1)
+    # print(df1)
     df1.to_excel('ПЕРФОРАЦИЯ, ОТКЛЮЧЕНИЕ ПЛАСТОВ.xlsx')
+
+    df_8_10 = pd.DataFrame(data=d_8_10)
+    return df_8_10, df1, df2
