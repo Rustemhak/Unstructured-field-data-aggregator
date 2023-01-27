@@ -1,6 +1,9 @@
 import pandas as pd
 import pdfplumber
 from collections import OrderedDict
+from pdf2docx import Converter
+from docx.api import Document
+from tabulate import tabulate
 
 
 def clear_enter(text: str) -> str:
@@ -80,3 +83,37 @@ def process_tales(path):
 
     df_8_10 = pd.DataFrame(data=d_8_10)
     return df_8_10, df1, df2
+
+
+if __name__ == '__main__':
+    # process_tales('AKT_KRS_2850_АЗН_пример.PDF')
+    test_path_pdf = 'AKT_KRS_2850_АЗН_пример.PDF'
+    result_path = 'test_result.docx'
+    # c = Converter(test_path_pdf)
+    # c.convert(result_path)
+    # c.close()
+
+    document = Document(result_path)
+    table = document.tables[8]  # здесь нужно указать номер таблицы
+    data = []
+
+    keys = None
+    for i, row in enumerate(table.rows):
+        text = (clear_enter(cell.text) for cell in row.cells)
+
+        if i == 0:
+            keys = tuple(text)
+            continue
+        row_data = dict(zip(keys, text))
+        data.append(row_data)
+    print(data)
+
+    df = pd.DataFrame(data)
+    print(tabulate(df, headers='keys', tablefmt='psql'))
+
+    # pdf = pdfplumber.open("table_test_pdf4.pdf")
+    # p0 = pdf.pages[0]
+    # tables = p0.extract_tables()
+    # table0 = tables[0]
+    # # table0 = list(map(lambda x: list(map(lambda y: clear_enter(y), x)), table0))
+    # print(table0)
