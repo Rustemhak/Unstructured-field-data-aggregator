@@ -9,7 +9,7 @@ from yargy import (
 from yargy import rule, or_
 from yargy.pipelines import morph_pipeline, caseless_pipeline
 from yargy.interpretation import fact, const
-from yargy.predicates import eq, caseless, normalized, type
+from yargy.predicates import eq, caseless, normalized, type, length_eq
 from yargy.pipelines import morph_pipeline
 from yargy.predicates import (
     eq, in_, dictionary,
@@ -51,8 +51,13 @@ DECIMAL = rule(INT,
                or_(COMMA, DOT),
                INT)
 COLON = eq(':')
-# любой токен
+# любой токен (не работает)
 POST = gram('POST')
+# аббревиатура
+ABBR = and_(
+    length_eq(3),
+    is_capitalized()
+)
 # токенайзер
 TOKENIZER = MorphTokenizer().remove_types(EOL)
 #IdTokenizer

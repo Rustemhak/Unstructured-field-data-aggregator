@@ -88,28 +88,30 @@ def process_tales(path):
 if __name__ == '__main__':
     # process_tales('AKT_KRS_2850_АЗН_пример.PDF')
     test_path_pdf = 'AKT_KRS_2850_АЗН_пример.PDF'
+
     result_path = 'test_result.docx'
-    # c = Converter(test_path_pdf)
-    # c.convert(result_path)
-    # c.close()
 
+    c = Converter(test_path_pdf)
+    c.convert(result_path)
+    c.close()
     document = Document(result_path)
-    table = document.tables[8]  # здесь нужно указать номер таблицы
-    data = []
+    for tb_id in range(len(document.tables)):
+        table = document.tables[tb_id]  # здесь нужно указать номер таблицы
+        data = []
 
-    keys = None
-    for i, row in enumerate(table.rows):
-        text = (clear_enter(cell.text) for cell in row.cells)
+        keys = None
+        for i, row in enumerate(table.rows):
+            text = (clear_enter(cell.text) for cell in row.cells)
 
-        if i == 0:
-            keys = tuple(text)
-            continue
-        row_data = dict(zip(keys, text))
-        data.append(row_data)
-    print(data)
+            if i == 0:
+                keys = tuple(text)
+                continue
+            row_data = dict(zip(keys, text))
+            data.append(row_data)
+        print(data)
 
-    df = pd.DataFrame(data)
-    print(tabulate(df, headers='keys', tablefmt='psql'))
+        df = pd.DataFrame(data)
+        print(tabulate(df, headers='keys', tablefmt='psql'))
 
     # pdf = pdfplumber.open("table_test_pdf4.pdf")
     # p0 = pdf.pages[0]
