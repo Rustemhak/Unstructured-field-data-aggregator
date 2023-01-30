@@ -5,11 +5,41 @@ from yargy import rule, and_, Parser, or_
 from yargy.predicates import is_capitalized, gte, lte
 from collections import defaultdict
 from read_report import read_pdf
-from yargy_utils import NUMERO_SIGN, INT, show_json, ADJF, SLASH, COLON
+from yargy_utils import NUMERO_SIGN, INT, show_json, ADJF, SLASH, COLON, TOKENIZER
 from act_tables import process_tales
 import pandas as pd
 
-#сконвертировать в word и посмотреть
+NAMES_FIELDS = ['Назначение скважины : до / после', 'Способ эксплуатации: до / после', 'Начало / оконч. ремонта:',
+                'Название поля: Начало / оконч. ремонта', 'Месторождение', 'Площадь', 'Признак', 'Акт принят']
+NEEDED_FIELDS = ['Назначение скважины : до / после', 'Способ эксплуатации: до / после', 'Начало / оконч. ремонта:',
+                 'Название поля: Начало / оконч. ремонта', 'Месторождение', 'Площадь', 'Признак', 'Акт принят']
+
+
+class Match(object):
+    def __init__(self, fact, spans):
+        self.fact = fact
+        self.spans = spans
+
+
+class Extractor(object):
+    def __init__(self, MAIN_FIELD, OTHER_FIELDS=None):
+        self.left_parser = Parser(MAIN_FIELD, tokenizer=TOKENIZER)
+        self.right_parser = Parser(OTHER_FIELDS, tokenizer=TOKENIZER)
+
+    def __call__(self, line):
+        """
+        Извлекает значение параметра между названиями полей
+        :param line: строка, в кото
+        :return: значение параметра
+        """
+        left_matches = self.left_parser.findall(line)
+        left_spans = [_.span for _ in left_matches]
+        right_matches = self.right_parser.findall(line)
+        right_spans = [_.span for _ in right_matches]
+        if left_spans and right_spans:
+            return line[left_spans[0].stop:right_spans[0].start].strip()
+
+
 def show_from_act(my_rule, lines):
     parser = Parser(my_rule)
     matches = list(parser.findall(lines))
@@ -34,17 +64,11 @@ def get_field_value_second(my_rule, lines):
         line = line.strip()
         match = list(parser.findall(line))
         if line is not None and len(line) and len(match):
-            print('сама строчка', line)
-            print('длина строчки', len(line))
-            print(type(line))
             fact = match[0].fact
             fact.value = line.replace(fact.field_name, '').strip()
             print('fact', fact)
             return fact
 
-
-# TODO Написать функцию, которая выцепляет значение параметра между названиями полей
-#
 
 # задавать самому путь
 path = 'AKT_KRS_2850_АЗН_пример.PDF'
@@ -81,7 +105,7 @@ data_for_df1[result.field_name].append(result.value)
 """
 Название поля: Назначение скважины : до / после
 Значение: идёт после названия поля
-Примечание: Работает если параметр в отдельной строчке
+Примечание: Работает, если параметр в отдельной строчке
 
 """
 Well_purpose = fact(
@@ -93,15 +117,13 @@ WELL_PURPOSE_WORDS = morph_pipeline(['Назначение скважины : д
 CAP_ADJF = rule(and_(ADJF,
                      is_capitalized()))
 WELL_PURPOSE = rule(WELL_PURPOSE_WORDS.interpretation(Well_purpose.field_name)).interpretation(Well_purpose)
-# show_from_act(WELL_PURPOSE, text_act)
-print(get_field_value_second(WELL_PURPOSE, lines))
 result = get_field_value_second(WELL_PURPOSE, lines)
 data_for_df1[result.field_name].append(result.value)
 # Способ эксплуатации: до / после
 """
 Название поля: Способ эксплуатации: до / после
 Значение: идёт после названия поля
-Примечание: Работает если параметр в отдельной строчке
+Примечание: Работает, если параметр в отдельной строчке
 """
 Method_operation = fact(
     'Method_operation',
@@ -111,14 +133,13 @@ METHOD_OPERATION_WORDS = morph_pipeline(['Способ эксплуатации:
 VALUE_METHOD_OPERATION = morph_pipeline(['Закачка по НКТ с пакером'])
 METHOD_OPERATION = rule(METHOD_OPERATION_WORDS.interpretation(Method_operation.field_name)).interpretation(
     Method_operation)
-print(get_field_value_second(METHOD_OPERATION, lines))
 result = get_field_value_second(METHOD_OPERATION, lines)
 data_for_df1[result.field_name].append(result.value)
 
 """
 Название поля: Начало / оконч. ремонта
 Значение: дата / дата
-Примечание: привязано к точному написанию параметра, умеет пропускать слово "месторождение"
+Примечание: привязано к конкретному формату даты, умеет пропускать слово "месторождение"
 """
 Repair = fact(
     'Repair',
@@ -150,7 +171,7 @@ data_for_df1[result.field_name].append(result.value)
 """
 Название поля: Месторождение
 Значение: название месторождения
-Примечание: привязано к точному написанию параметра, умеет пропускать слово "месторождение"
+Примечание: умеет пропускать слово "месторождение"
 """
 #
 Field = fact(
@@ -167,39 +188,42 @@ data_for_df1[result.field_name].append(result.value)
 """
 Название поля: площадь
 Значение: объект (номер залежи либо название месторождения)
-Примечание: реагирует на названия месторождения и количество залежей (переделать для любого слова после площадь)
+Примечание: Берет значение между парметрами
 """
 Square = fact(
     'Square',
     ['field_name', 'value']
 )
-SQUARE_WORD = morph_pipeline(['площадь'])
-DEPOSIT = morph_pipeline(['залежь'])
-SQUARE_VALUE = or_(CAP_ADJF, rule(DEPOSIT, NUMERO_SIGN, INT))
-SQUARE = rule(SQUARE_WORD.interpretation(Square.field_name),
-              COLON, SQUARE_VALUE.interpretation(Square.value).optional()).interpretation(Square)
-show_from_act(SQUARE, text_act)
-result = get_field_value(SQUARE, text_act)
-data_for_df1[result.field_name].append(result.value)
+SQUARE_NAME = ['Площадь :']
+SQUARE_WORD = morph_pipeline(SQUARE_NAME)
+SIGN_NAME = ['Признак']
+SIGN_WORD = morph_pipeline(SIGN_NAME)
+
+extractor = Extractor(SQUARE_WORD, SIGN_WORD)
+match = extractor(text_act)
+if match:
+    data_for_df1[SQUARE_NAME[0]].append(match)
+
 # Признак
 """
 Название поля: признак
 Значение: ПНП
-Примечание: Реагирует на ПНП (переделать)
+Примечание: Берет значение между парметрами
 """
 Sign = fact(
     'Sign',
     ['field_name', 'value']
 )
-SIGN_WORD = morph_pipeline(['признак'])
-SIGN_VALUE = morph_pipeline(['ПНП'])
-SIGN = rule(SIGN_WORD.interpretation(Sign.field_name),
-            SIGN_VALUE.interpretation(Sign.value).optional()).interpretation(Sign)
-show_from_act(SIGN, text_act)
-result = get_field_value(SIGN, text_act)
-data_for_df1[result.field_name].append(result.value)
-print(data_for_df1)
 
+OTHER_FIELDS = morph_pipeline(['Акт принят'])
+# result = get_field_value(SIGN, text_act)
+# data_for_df1[result.field_name].append(result.value)
+extractor = Extractor(SIGN_WORD, OTHER_FIELDS)
+match = extractor(text_act)
+if match:
+    data_for_df1[SIGN_NAME[0]].append(match)
+
+print(data_for_df1)
 df1_7 = pd.DataFrame(data=data_for_df1)
 
 # Из первой таблицы вытащить нужные колонки
