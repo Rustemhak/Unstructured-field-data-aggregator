@@ -140,8 +140,9 @@ class Algorithm(QObject):
 
     def run(self):
         print('algo was starting')
+        print(self.kwargs.items())
         self.kwargs['progress_bar'] = self.progress_bar
-        self.kwargs['is_one_report'] = False
+        #self.kwargs['is_one_report'] = False
         result = self.function(*self.args, **self.kwargs)
         print(f'algo return: {result}')
         if not isinstance(result, list):
